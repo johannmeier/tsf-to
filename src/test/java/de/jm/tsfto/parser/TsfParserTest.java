@@ -66,11 +66,14 @@ class TsfParserTest {
 
     @Test
     void otherToken() {
-        List<TsfToken> tokens = new TsfParser(":d-s ,,r ;d,_ ,d= ").parse();
+        List<TsfToken> tokens = new TsfParser(":d-s ,,r ;d,_ ,d= !d+r :d* !! *").parse();
         assertEquals(":d-s", tokens.get(0).toString());
         assertEquals(",,r", tokens.get(1).toString());
         assertEquals(";d,_", tokens.get(2).toString());
         assertEquals(",d=", tokens.get(3).toString());
+        assertEquals("!d+r", tokens.get(4).toString());
+        assertEquals(":d*", tokens.get(5).toString());
+        assertEquals("!!", tokens.get(6).toString());
     }
 
 }

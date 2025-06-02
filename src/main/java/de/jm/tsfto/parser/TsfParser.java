@@ -26,7 +26,7 @@ public class TsfParser {
             if (isStartToken() && !token.isEmpty()) {
                 tokens.add(new TsfToken(token.toString().trim()));
                 token.setLength(0);
-                if (isHalfQuarter() || isThirdThird() || isHalfHalfQuarter()) {
+                if (isHalfQuarter() || isThirdThird() || isHalfHalfQuarter() || isDoubleBar()) {
                     token.append(current());
                     pos++;
                 }
@@ -40,7 +40,7 @@ public class TsfParser {
     }
 
     private boolean isStartToken() {
-        if (isHalfQuarter() || isThirdThird() || isHalfHalfQuarter())
+        if (isHalfQuarter() || isThirdThird() || isHalfHalfQuarter() || isDoubleBar())
             return true;
         if (isSingleRestOrNote()) {
             return true;
@@ -61,9 +61,13 @@ public class TsfParser {
         return "/".equals(current()) && "/".equals(next());
     }
 
+    private boolean isDoubleBar() {
+        return "!".equals(current()) && "!".equals(next());
+    }
+
     private boolean isSingleRestOrNote() {
         return " ".equals(previous())
-                && (TOKEN_REST.contains(current()) || TOKEN_NOTES.contains(current()))
+                && (TOKEN_REST.contains(current()) || TOKEN_NOTES.contains(current()) || "*".equals(current()))
                 && (" ".equals(next()) || next().isEmpty());
     }
 
