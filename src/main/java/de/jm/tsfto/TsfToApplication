@@ -1,0 +1,23 @@
+package de.wsc.tsfto;
+
+import de.wsc.tsfto.cli.Cli;
+import de.wsc.tsfto.cli.CliApp;
+import de.wsc.tsfto.cli.CliLogger;
+
+import java.util.List;
+import java.util.logging.Logger;
+
+public class TsfToApplication extends CliApp {
+
+    private static final Logger logger = CliLogger.getLogger(TsfToApplication.class.getName());
+
+    public static void main(String[] args) {
+        Cli.run(TsfToApplication.class, args);
+    }
+
+    @Override
+    public int cliMain(List<String> args) {
+        logger.fine("Hello Cli");
+        return 0;
+    }
+}
