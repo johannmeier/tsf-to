@@ -1,8 +1,8 @@
-package de.wsc.tsfto;
+package de.jm.tsfto;
 
-import de.wsc.tsfto.cli.Cli;
-import de.wsc.tsfto.cli.CliApp;
-import de.wsc.tsfto.cli.CliLogger;
+import de.jm.tsfto.cli.Cli;
+import de.jm.tsfto.cli.CliApp;
+import de.jm.tsfto.cli.CliLogger;
 
 import java.util.List;
 import java.util.logging.Logger;

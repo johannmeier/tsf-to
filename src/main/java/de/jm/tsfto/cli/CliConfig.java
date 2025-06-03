@@ -1,6 +1,6 @@
-package de.wsc.tsfto.cli;
+package de.jm.tsfto.cli;
 
-import de.wsc.tsfto.cli.exceptions.CliRuntimeException;
+import de.jm.tsfto.cli.exceptions.CliRuntimeException;
 
 import java.io.File;
 import java.io.IOException;

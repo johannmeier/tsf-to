@@ -1,4 +1,4 @@
-package de.wsc.tsfto.cli.exceptions;
+package de.jm.tsfto.cli.exceptions;
 
 public class CliRuntimeException extends RuntimeException{
     public CliRuntimeException(Throwable t) {

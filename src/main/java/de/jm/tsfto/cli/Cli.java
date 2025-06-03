@@ -1,12 +1,12 @@
-package de.wsc.tsfto.cli;
+package de.jm.tsfto.cli;
 
-import de.wsc.tsfto.cli.annotations.App;
-import de.wsc.tsfto.cli.annotations.Argument;
-import de.wsc.tsfto.cli.annotations.CliConfiguration;
-import de.wsc.tsfto.cli.annotations.CliService;
-import de.wsc.tsfto.cli.annotations.ErrorCode;
-import de.wsc.tsfto.cli.annotations.Flag;
-import de.wsc.tsfto.cli.exceptions.CliRuntimeException;
+import de.jm.tsfto.cli.annotations.App;
+import de.jm.tsfto.cli.annotations.Argument;
+import de.jm.tsfto.cli.annotations.CliConfiguration;
+import de.jm.tsfto.cli.annotations.CliService;
+import de.jm.tsfto.cli.annotations.ErrorCode;
+import de.jm.tsfto.cli.annotations.Flag;
+import de.jm.tsfto.cli.exceptions.CliRuntimeException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;

@@ -1,4 +1,4 @@
-package de.wsc.tsfto.cli;
+package de.jm.tsfto.cli;
 
 import java.text.MessageFormat;
 import java.util.logging.LogRecord;
