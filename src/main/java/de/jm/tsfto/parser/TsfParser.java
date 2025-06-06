@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TsfParser {
-    private static final String TOKEN_START = "!;:.,/";
-    private static final String TOKEN_NOTES = "drmfslt";
-    private static final String TOKEN_REST = "!;:.,/";
+    public static final String TOKEN_START = "!;:.,/";
+    public static final String TOKEN_NOTES = "drmfsltb";
+    public static final String TOKEN_REST = "!;:.,/";
 
     private final String line;
     private int pos = 0;
@@ -24,7 +24,7 @@ public class TsfParser {
         StringBuilder token = new StringBuilder();
         for (pos = 0; pos < line.length(); pos++) {
             if (isStartToken() && !token.isEmpty()) {
-                tokens.add(new TsfToken(token.toString().trim()));
+                tokens.add(TsfToken.of(token.toString().trim()));
                 token.setLength(0);
                 if (isHalfQuarter() || isThirdThird() || isHalfHalfQuarter() || isDoubleBar()) {
                     token.append(current());
@@ -34,7 +34,7 @@ public class TsfParser {
             token.append(current());
         }
         if (!token.isEmpty()) {
-            tokens.add(new TsfToken(token.toString().trim()));
+            tokens.add(TsfToken.of(token.toString().trim()));
         }
         return tokens;
     }

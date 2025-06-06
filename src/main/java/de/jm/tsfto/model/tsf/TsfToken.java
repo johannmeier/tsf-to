@@ -3,8 +3,12 @@ package de.jm.tsfto.model.tsf;
 public class TsfToken {
     private final String token;
 
-    public TsfToken(String token) {
+    private TsfToken(String token) {
         this.token = token;
+    }
+
+    public static TsfToken of(String token) {
+        return new TsfToken(token);
     }
 
     @Override

@@ -17,7 +17,7 @@ public class TsfToApplication extends CliApp {
 
     @Override
     public int cliMain(List<String> args) {
-        logger.fine("Hello Cli");
+        logger.info("Hello Cli");
         return 0;
     }
 }

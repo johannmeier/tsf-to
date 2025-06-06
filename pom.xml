@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>de.jm.tonic.gui.TonicTo</mainClass>
+                            <mainClass>de.jm.tsfto.TsfToApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
