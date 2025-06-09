@@ -46,11 +46,13 @@ class TsfTokenParserTest {
         assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(";d"));
         assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(":d"));
         assertEquals(TsfNote.Length.HALF_QUARTER, TsfTokenParser.getLength(".,d"));
+        assertEquals(TsfNote.Length.HALF_QUARTER, TsfTokenParser.getLength(",,d"));
         assertEquals(TsfNote.Length.TWO_THIRDS, TsfTokenParser.getLength("//d"));
         assertEquals(TsfNote.Length.HALF, TsfTokenParser.getLength(".d"));
         assertEquals(TsfNote.Length.THIRD, TsfTokenParser.getLength("/d"));
         assertEquals(TsfNote.Length.QUARTER, TsfTokenParser.getLength(",d"));
         assertEquals(TsfNote.Length.EIGHTS, TsfTokenParser.getLength("d"));
+
         // breaks
         assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(":"));
         assertEquals(TsfNote.Length.HALF, TsfTokenParser.getLength("."));
@@ -108,6 +110,7 @@ class TsfTokenParserTest {
 
     @Test
     void postFix() {
+        assertEquals("+", TsfTokenParser.getPostfix("|s+"));
         assertEquals("", TsfTokenParser.getPostfix(null));
         assertEquals("", TsfTokenParser.getPostfix(""));
         assertEquals("", TsfTokenParser.getPostfix(":d"));
@@ -128,6 +131,12 @@ class TsfTokenParserTest {
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.NONE, -1, TsfNote.Type.NOTE, notes.getFirst());
         assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, 2, TsfNote.Type.NOTE, notes.get(1));
+
+        notes = TsfTokenParser.parse(List.of(TsfToken.of("|s+"), TsfToken.of(",,m")));
+        assertEquals(2, notes.size());
+        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
+        assertEquals("+", notes.getFirst().getPostfix());
+        assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.NOTE, notes.get(1));
 
         notes = TsfTokenParser.parse(List.of(TsfToken.of(";-"), TsfToken.of(".")));
         assertEquals(2, notes.size());

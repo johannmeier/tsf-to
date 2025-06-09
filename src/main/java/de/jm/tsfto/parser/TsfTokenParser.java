@@ -20,6 +20,7 @@ public class TsfTokenParser {
     static Map<String, TsfNote.Length> prefixToLength = Map.of(
             ".", TsfNote.Length.HALF,
             ".,", TsfNote.Length.HALF_QUARTER,
+            ",,", TsfNote.Length.HALF_QUARTER,
             "//", TsfNote.Length.TWO_THIRDS,
             ",", TsfNote.Length.QUARTER,
             "/", TsfNote.Length.THIRD,
@@ -119,7 +120,6 @@ public class TsfTokenParser {
     }
 
     TsfNote.Length getLength() {
-        String current = current().toString();
         TsfNote.Length length = getLength(current().toString());
 
         if (length == TsfNote.Length.UNKNOWN) {
@@ -180,7 +180,7 @@ public class TsfTokenParser {
     }
 
     String getPostfix() {
-        return null;
+        return getPostfix(current().toString());
     }
 
     static String getPostfix(String tsfToken) {
