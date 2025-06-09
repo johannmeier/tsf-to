@@ -104,7 +104,7 @@ public class TsfTokenParser {
 
     static String getNote(String tsfToken) {
         if (tsfToken == null || tsfToken.isEmpty()) {
-            return "";
+            throw new InvalidNoteRuntimeException(tsfToken);
         }
 
         String note = getFirstNote(tsfToken);
@@ -136,7 +136,7 @@ public class TsfTokenParser {
 
     static TsfNote.Length getLength(String token) {
         if (token == null || token.isEmpty()) {
-            return TsfNote.Length.UNKNOWN;
+            throw new InvalidNoteRuntimeException(token);
         }
 
         return prefixToLength.getOrDefault(getPrefix(token), TsfNote.Length.UNKNOWN);

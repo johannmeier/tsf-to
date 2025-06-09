@@ -36,8 +36,8 @@ class TsfTokenParserTest {
 
     @Test
     void length() {
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(null));
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(""));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getLength(null));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getLength(""));
 
         assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength("!!d"));
         assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength("||d"));
@@ -60,10 +60,9 @@ class TsfTokenParserTest {
 
     @Test
     void note() {
-        assertEquals("", TsfTokenParser.getNote("."));
-        assertEquals("-", TsfTokenParser.getNote(":-"));
-        assertEquals("", TsfTokenParser.getNote(null));
-        assertEquals("", TsfTokenParser.getNote(""));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getNote(null));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getNote(""));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getNote(".bi"));
 
         assertEquals("da", TsfTokenParser.getNote("da"));
         assertEquals("d", TsfTokenParser.getNote(":d"));
@@ -74,7 +73,8 @@ class TsfTokenParserTest {
 
         assertEquals("t", TsfTokenParser.getNote(":l-t,"));
 
-        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getNote(".bi"));
+        assertEquals("", TsfTokenParser.getNote("."));
+        assertEquals("-", TsfTokenParser.getNote(":-"));
     }
 
     @Test
@@ -129,9 +129,9 @@ class TsfTokenParserTest {
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.NONE, -1, TsfNote.Type.NOTE, notes.getFirst());
         assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, 2, TsfNote.Type.NOTE, notes.get(1));
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of(":-"), TsfToken.of(".")));
+        notes = TsfTokenParser.parse(List.of(TsfToken.of(";-"), TsfToken.of(".")));
         assertEquals(2, notes.size());
-        assertNote(TsfNote.Length.HALF, TsfNote.Accent.NONE, 0, TsfNote.Type.CONTINUE, notes.getFirst());
+        assertNote(TsfNote.Length.HALF, TsfNote.Accent.ACCENTED, 0, TsfNote.Type.CONTINUE, notes.getFirst());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.BREAK, notes.get(1));
     }
 
