@@ -19,15 +19,17 @@ public class TsfNote {
     private final String note;
     private final Length length;
     private final Accent accent;
+    private final String prefix;
     private final String postfix;
     private final int keyChangeOctave;
     private final String keyChangeNote;
 
-    public TsfNote(int octave, String note, Length length, Accent accent, String postfix, int keyChangeOctave, String keyChangeNote) {
+    public TsfNote(int octave, String note, Length length, Accent accent, String prefix, String postfix, int keyChangeOctave, String keyChangeNote) {
         this.octave = octave;
         this.note = note;
         this.length = length;
         this.accent = accent;
+        this.prefix = prefix;
         this.postfix = postfix;
         this.keyChangeOctave = keyChangeOctave;
         this.keyChangeNote = keyChangeNote;
@@ -68,6 +70,10 @@ public class TsfNote {
 
     public Accent getAccent() {
         return accent;
+    }
+
+    public String getPrefix() {
+        return prefix;
     }
 
     public String getPostfix() {

@@ -137,6 +137,7 @@ class TsfTokenParserTest {
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
         assertEquals("+", notes.getFirst().getPostfix());
         assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.NOTE, notes.get(1));
+        assertEquals(",,", notes.get(1).getPrefix());
 
         notes = TsfTokenParser.parse(List.of(TsfToken.of(";-"), TsfToken.of(".")));
         assertEquals(2, notes.size());

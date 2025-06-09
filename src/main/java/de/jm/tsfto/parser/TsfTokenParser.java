@@ -59,7 +59,7 @@ public class TsfTokenParser {
 
     private List<TsfNote> parse() {
         for (pos = 0; pos < tokens.size(); pos++) {
-            tsfNotes.add(new TsfNote(getOctave(), getNote(), getLength(), getAccent(), getPostfix(), getKeyChangeOctave(), getKeyChangeNote()));
+            tsfNotes.add(new TsfNote(getOctave(), getNote(), getLength(), getAccent(), getPrefix(), getPostfix(), getKeyChangeOctave(), getKeyChangeNote()));
         }
         return tsfNotes;
     }
@@ -161,6 +161,10 @@ public class TsfTokenParser {
            accent = Accent.UNKNOWN;
         }
         return accent;
+    }
+
+    String getPrefix() {
+        return getPrefix(current().toString());
     }
 
     static String getPrefix(String token) {
