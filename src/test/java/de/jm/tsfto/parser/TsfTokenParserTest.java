@@ -133,6 +133,11 @@ class TsfTokenParserTest {
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.ACCENTED, 0, TsfNote.Type.CONTINUE, notes.getFirst());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.BREAK, notes.get(1));
+
+        notes = TsfTokenParser.parse(List.of(TsfToken.of("!!"), TsfToken.of("!!")));
+        assertEquals(2, notes.size());
+        assertNote(TsfNote.Length.FULL, TsfNote.Accent.DOUBLE_BAR, 0, TsfNote.Type.BREAK, notes.getFirst());
+        assertNote(TsfNote.Length.UNKNOWN, TsfNote.Accent.DOUBLE_BAR, 0, TsfNote.Type.END_OF_PART, notes.get(1));
     }
 
     private void assertNote(TsfNote.Length length, TsfNote.Accent accent, int octave, TsfNote.Type type, TsfNote note) {

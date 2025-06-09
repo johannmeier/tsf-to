@@ -10,8 +10,11 @@ public class TsfNote {
     );
 
     public enum Length {FULL, HALF_QUARTER, TWO_THIRDS, HALF, QUARTER, THIRD, EIGHTS, UNKNOWN}
+
     public enum Accent {BAR, DOUBLE_BAR, ACCENTED, NONE, UNKNOWN}
-    public enum Type {NOTE, CONTINUE, BREAK}
+
+    public enum Type {NOTE, CONTINUE, BREAK, END_OF_PART}
+
     private final int octave;
     private final String note;
     private final Length length;
@@ -31,6 +34,10 @@ public class TsfNote {
     }
 
     public Type getType() {
+
+        if (accent == Accent.DOUBLE_BAR && length == Length.UNKNOWN) {
+            return Type.END_OF_PART;
+        }
 
         if (note.isEmpty()) {
             return Type.BREAK;

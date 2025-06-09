@@ -119,15 +119,19 @@ public class TsfTokenParser {
     }
 
     TsfNote.Length getLength() {
+        String current = current().toString();
         TsfNote.Length length = getLength(current().toString());
 
         if (length == TsfNote.Length.UNKNOWN) {
-            length = getLength(next().toString());
+            TsfToken next = next();
+            if (next != null) {
+                length = getLength(next.toString());
 
-            if (length == TsfNote.Length.UNKNOWN) {
-                length = TsfNote.Length.FULL;
-            } else {
-                length = remainingLengths.get(length);
+                if (length == TsfNote.Length.UNKNOWN) {
+                    length = TsfNote.Length.FULL;
+                } else {
+                    length = remainingLengths.get(length);
+                }
             }
         }
 
