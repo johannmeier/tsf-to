@@ -1,14 +1,17 @@
 package de.jm.tsfto.model.tsf;
 
+import de.jm.tsfto.exception.InvalidNoteRuntimeException;
+
 import java.util.List;
 
 public class TsfNote {
     public static List<String> validNotes = List.of(
-            "da", "d", "di", "ra", "r", "ri", "ma", "m", "mi", "fa", "f", "fi", "sa", "s", "si", "la", "l", "li", "ta", "t", "ti", "ba"
+            "da", "d", "di", "ra", "r", "ri", "ma", "m", "mi", "fa", "f", "fi", "sa", "s", "si", "la", "l", "li", "ta", "t", "ti", "ba", "-"
     );
 
     public enum Length {FULL, HALF_QUARTER, TWO_THIRDS, HALF, QUARTER, THIRD, EIGHTS, UNKNOWN}
     public enum Accent {BAR, DOUBLE_BAR, ACCENTED, NONE, UNKNOWN}
+    public enum Type {NOTE, CONTINUE, BREAK}
     private final int octave;
     private final String note;
     private final Length length;
@@ -25,6 +28,23 @@ public class TsfNote {
         this.postfix = postfix;
         this.keyChangeOctave = keyChangeOctave;
         this.keyChangeNote = keyChangeNote;
+    }
+
+    public Type getType() {
+
+        if (note.isEmpty()) {
+            return Type.BREAK;
+        }
+
+        if ("-".equals(note)) {
+            return Type.CONTINUE;
+        }
+
+        if (validNotes.contains(note)) {
+            return Type.NOTE;
+        } else {
+            throw new InvalidNoteRuntimeException(note);
+        }
     }
 
     public int getOctave() {

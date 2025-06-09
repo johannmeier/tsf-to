@@ -35,6 +35,15 @@ public class TsfTokenParser {
             ":", Accent.NONE
     );
 
+    static Map<TsfNote.Length, TsfNote.Length> remainingLengths = Map.of(
+            TsfNote.Length.HALF, TsfNote.Length.HALF,
+            TsfNote.Length.QUARTER, TsfNote.Length.QUARTER,
+            TsfNote.Length.HALF_QUARTER, TsfNote.Length.QUARTER,
+            TsfNote.Length.THIRD, TsfNote.Length.THIRD,
+            TsfNote.Length.TWO_THIRDS, TsfNote.Length.THIRD,
+            TsfNote.Length.EIGHTS, TsfNote.Length.EIGHTS
+    );
+
     private final List<TsfToken> tokens;
     private final List<TsfNote> tsfNotes = new ArrayList<>();
     private int pos;
@@ -70,8 +79,8 @@ public class TsfTokenParser {
         return getOctave(current().toString());
     }
 
-    int getOctave(String tsfToken) {
-        int pos = getPrefix(tsfToken).length() + getNote().length();
+    static int getOctave(String tsfToken) {
+        int pos = getPrefix(tsfToken).length() + getNote(tsfToken).length();
         String token = tsfToken.substring(pos);
         int octave = 0;
         for (int i = 0; i < token.length(); i++) {
@@ -112,8 +121,14 @@ public class TsfTokenParser {
     TsfNote.Length getLength() {
         TsfNote.Length length = getLength(current().toString());
 
-        if (length == null) {
+        if (length == TsfNote.Length.UNKNOWN) {
             length = getLength(next().toString());
+
+            if (length == TsfNote.Length.UNKNOWN) {
+                length = TsfNote.Length.FULL;
+            } else {
+                length = remainingLengths.get(length);
+            }
         }
 
         return length;
@@ -124,13 +139,7 @@ public class TsfTokenParser {
             return TsfNote.Length.UNKNOWN;
         }
 
-        TsfNote.Length length = prefixToLength.get(getPrefix(token));
-
-        if (length == null) {
-            length = TsfNote.Length.FULL;
-        }
-
-        return length;
+        return prefixToLength.getOrDefault(getPrefix(token), TsfNote.Length.UNKNOWN);
     }
 
     TsfNote.Accent getAccent() {
@@ -145,11 +154,7 @@ public class TsfTokenParser {
         String prefix = getPrefix(tsfToken);
         TsfNote.Accent accent = prefixToAccent.get(prefix);
         if (accent == null) {
-            if (prefixToLength.containsKey(prefix)) {
-                accent = Accent.NONE;
-            } else {
-                accent = Accent.UNKNOWN;
-            }
+           accent = Accent.UNKNOWN;
         }
         return accent;
     }
@@ -174,8 +179,32 @@ public class TsfTokenParser {
         return null;
     }
 
+    static String getPostfix(String tsfToken) {
+        if (tsfToken == null || tsfToken.isEmpty()) {
+            return "";
+        }
+
+        String prefix = getPrefix(tsfToken);
+        String note = getNote(tsfToken);
+        String keyChangeNote = getKeyChangeNote(tsfToken);
+        int octave = getOctave(tsfToken);
+        int keyChangeOctave = getKeyChangeOctave(tsfToken);
+
+        return tsfToken.substring(prefix.length() + note.length() + keyChangeNote.length() + Math.abs(octave) + Math.abs(keyChangeOctave));
+    }
+
     int getKeyChangeOctave() {
-        return 0;
+        return getKeyChangeOctave(current().toString());
+    }
+
+    static int getKeyChangeOctave(String tsfToken) {
+        if (tsfToken == null || !tsfToken.contains("-")) {
+            return 0;
+        }
+
+        String[] notes = tsfToken.split("-");
+
+        return getOctave(notes[0]);
     }
 
     String getKeyChangeNote() {
@@ -183,32 +212,31 @@ public class TsfTokenParser {
     }
 
     static String getKeyChangeNote(String tsfToken) {
-        if (tsfToken == null || tsfToken.isEmpty()) {
+        if (tsfToken == null || !tsfToken.contains("-")) {
             return "";
         }
 
-        String firstNote = getFirstNote(tsfToken);
-        String afterNote = tsfToken.substring(firstNote.length() + getPrefix(tsfToken).length());
+        String[] notes = tsfToken.split("-");
 
-        if (!afterNote.isEmpty() && '-' == afterNote.charAt(0)) {
-            // key change
-            return firstNote;
-        } else {
-            return "";
-        }
+        return getNote(notes[0]);
+
     }
 
     private static String getFirstNote(String tsfToken) {
         if (tsfToken == null || tsfToken.isEmpty()) {
-            return "";
+            throw new InvalidNoteRuntimeException(tsfToken);
         }
 
         String prefix = getPrefix(tsfToken);
         String token = tsfToken.substring(prefix.length());
-        StringBuilder note = new StringBuilder();
         int lengthOfToken = token.length();
+        if (lengthOfToken == 0) {
+            return "";
+        }
 
-        if (lengthOfToken > 0 && validNoteFirstChars.contains(Character.toString(token.charAt(0)))) {
+        StringBuilder note = new StringBuilder();
+
+        if (validNoteFirstChars.contains(Character.toString(token.charAt(0)))) {
             note.append(token.charAt(0));
         }
 
