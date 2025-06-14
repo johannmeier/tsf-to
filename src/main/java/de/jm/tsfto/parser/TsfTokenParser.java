@@ -10,7 +10,7 @@ import java.util.Map;
 
 import static de.jm.tsfto.model.tsf.TsfNote.Accent;
 import static de.jm.tsfto.model.tsf.TsfNote.validNotes;
-import static de.jm.tsfto.parser.TsfParser.TOKEN_NOTES;
+import static de.jm.tsfto.parser.TsfLineParser.TOKEN_NOTES;
 
 public class TsfTokenParser {
 
@@ -37,12 +37,14 @@ public class TsfTokenParser {
     );
 
     static Map<TsfNote.Length, TsfNote.Length> remainingLengths = Map.of(
+            TsfNote.Length.FULL, TsfNote.Length.FULL,
             TsfNote.Length.HALF, TsfNote.Length.HALF,
             TsfNote.Length.QUARTER, TsfNote.Length.QUARTER,
             TsfNote.Length.HALF_QUARTER, TsfNote.Length.QUARTER,
             TsfNote.Length.THIRD, TsfNote.Length.THIRD,
             TsfNote.Length.TWO_THIRDS, TsfNote.Length.THIRD,
-            TsfNote.Length.EIGHTS, TsfNote.Length.EIGHTS
+            TsfNote.Length.EIGHTS, TsfNote.Length.EIGHTS,
+            TsfNote.Length.UNKNOWN, TsfNote.Length.UNKNOWN
     );
 
     private final List<TsfToken> tokens;
@@ -59,7 +61,11 @@ public class TsfTokenParser {
 
     private List<TsfNote> parse() {
         for (pos = 0; pos < tokens.size(); pos++) {
-            tsfNotes.add(new TsfNote(getOctave(), getNote(), getLength(), getAccent(), getPrefix(), getPostfix(), getKeyChangeOctave(), getKeyChangeNote()));
+            TsfNote.Length length = getLength();
+            if (length == TsfNote.Length.UNKNOWN && !TsfLineParser.isEndToken(current().toString()) && next() == null) {
+                length = TsfNote.Length.FULL;
+            }
+            tsfNotes.add(new TsfNote(getOctave(), getNote(), length, getAccent(), getPrefix(), getPostfix(), getKeyChangeOctave(), getKeyChangeNote()));
         }
         return tsfNotes;
     }
@@ -120,25 +126,24 @@ public class TsfTokenParser {
     }
 
     TsfNote.Length getLength() {
-        TsfNote.Length length = getLength(current().toString());
+        TsfNote.Length length = remainingLengths.get(getTsfSignLength(current().toString()));
+        TsfToken next = next();
 
-        if (length == TsfNote.Length.UNKNOWN) {
-            TsfToken next = next();
-            if (next != null) {
-                length = getLength(next.toString());
+        if (next != null) {
+            String prefix = getPrefix(next.toString());
+            if (prefixToLength.containsKey(prefix)) {
+                length = getTsfSignLength(next.toString());
+            }
 
-                if (length == TsfNote.Length.UNKNOWN) {
-                    length = TsfNote.Length.FULL;
-                } else {
-                    length = remainingLengths.get(length);
-                }
+            if (length == TsfNote.Length.UNKNOWN) {
+                length = TsfNote.Length.FULL;
             }
         }
 
         return length;
     }
 
-    static TsfNote.Length getLength(String token) {
+    static TsfNote.Length getTsfSignLength(String token) {
         if (token == null || token.isEmpty()) {
             throw new InvalidNoteRuntimeException(token);
         }
@@ -158,7 +163,7 @@ public class TsfTokenParser {
         String prefix = getPrefix(tsfToken);
         TsfNote.Accent accent = prefixToAccent.get(prefix);
         if (accent == null) {
-           accent = Accent.UNKNOWN;
+            accent = Accent.UNKNOWN;
         }
         return accent;
     }

@@ -6,15 +6,15 @@ import de.jm.tsfto.model.tsf.TsfToken;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TsfParser {
+public class TsfLineParser {
     public static final String TOKEN_START = "!;:.,/";
-    public static final String TOKEN_NOTES = "drmfsltb";
+    public static final String TOKEN_NOTES = "drmfsltb-";
     public static final String TOKEN_REST = "!;:.,/";
 
     private final String line;
     private int pos = 0;
 
-    public TsfParser(String line) {
+    public TsfLineParser(String line) {
         this.line = line;
     }
 
@@ -62,7 +62,11 @@ public class TsfParser {
     }
 
     private boolean isDoubleBar() {
-        return "!".equals(current()) && "!".equals(next());
+        return "!".equals(current()) && "!".equals(next()) || "|".equals(current()) && "|".equals(next());
+    }
+
+    public static boolean isEndToken(String token) {
+        return "!!".equals(token) || "||".equals(token);
     }
 
     private boolean isSingleRestOrNote() {

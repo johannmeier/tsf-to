@@ -36,28 +36,28 @@ class TsfTokenParserTest {
 
     @Test
     void length() {
-        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getLength(null));
-        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getLength(""));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getTsfSignLength(null));
+        assertThrows(InvalidNoteRuntimeException.class, () -> TsfTokenParser.getTsfSignLength(""));
 
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength("!!d"));
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength("||d"));
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength("!d"));
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength("|d"));
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(";d"));
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(":d"));
-        assertEquals(TsfNote.Length.HALF_QUARTER, TsfTokenParser.getLength(".,d"));
-        assertEquals(TsfNote.Length.HALF_QUARTER, TsfTokenParser.getLength(",,d"));
-        assertEquals(TsfNote.Length.TWO_THIRDS, TsfTokenParser.getLength("//d"));
-        assertEquals(TsfNote.Length.HALF, TsfTokenParser.getLength(".d"));
-        assertEquals(TsfNote.Length.THIRD, TsfTokenParser.getLength("/d"));
-        assertEquals(TsfNote.Length.QUARTER, TsfTokenParser.getLength(",d"));
-        assertEquals(TsfNote.Length.EIGHTS, TsfTokenParser.getLength("d"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength("!!d"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength("||d"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength("!d"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength("|d"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength(";d"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength(":d"));
+        assertEquals(TsfNote.Length.HALF_QUARTER, TsfTokenParser.getTsfSignLength(".,d"));
+        assertEquals(TsfNote.Length.HALF_QUARTER, TsfTokenParser.getTsfSignLength(",,d"));
+        assertEquals(TsfNote.Length.TWO_THIRDS, TsfTokenParser.getTsfSignLength("//d"));
+        assertEquals(TsfNote.Length.HALF, TsfTokenParser.getTsfSignLength(".d"));
+        assertEquals(TsfNote.Length.THIRD, TsfTokenParser.getTsfSignLength("/d"));
+        assertEquals(TsfNote.Length.QUARTER, TsfTokenParser.getTsfSignLength(",d"));
+        assertEquals(TsfNote.Length.EIGHTS, TsfTokenParser.getTsfSignLength("d"));
 
         // breaks
-        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getLength(":"));
-        assertEquals(TsfNote.Length.HALF, TsfTokenParser.getLength("."));
-        assertEquals(TsfNote.Length.QUARTER, TsfTokenParser.getLength(","));
-        assertEquals(TsfNote.Length.THIRD, TsfTokenParser.getLength("/"));
+        assertEquals(TsfNote.Length.UNKNOWN, TsfTokenParser.getTsfSignLength(":"));
+        assertEquals(TsfNote.Length.HALF, TsfTokenParser.getTsfSignLength("."));
+        assertEquals(TsfNote.Length.QUARTER, TsfTokenParser.getTsfSignLength(","));
+        assertEquals(TsfNote.Length.THIRD, TsfTokenParser.getTsfSignLength("/"));
     }
 
     @Test
@@ -122,21 +122,24 @@ class TsfTokenParserTest {
 
     @Test
     void parse() {
-        List<TsfNote> notes = TsfTokenParser.parse(List.of(TsfToken.of("!d"), TsfToken.of(".m,")));
+        List<TsfNote> notes;
+
+        notes = TsfTokenParser.parse(List.of(TsfToken.of(":d,"), TsfToken.of(".,m''")));
+        assertEquals(2, notes.size());
+        assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.NONE, -1, TsfNote.Type.NOTE, notes.getFirst());
+        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 2, TsfNote.Type.NOTE, notes.get(1));
+
+        notes = TsfTokenParser.parse(List.of(TsfToken.of("!d"), TsfToken.of(".m,")));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, -1, TsfNote.Type.NOTE, notes.get(1));
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of(":d,"), TsfToken.of(".,m''")));
-        assertEquals(2, notes.size());
-        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.NONE, -1, TsfNote.Type.NOTE, notes.getFirst());
-        assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, 2, TsfNote.Type.NOTE, notes.get(1));
 
         notes = TsfTokenParser.parse(List.of(TsfToken.of("|s+"), TsfToken.of(",,m")));
         assertEquals(2, notes.size());
-        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
+        assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
         assertEquals("+", notes.getFirst().getPostfix());
-        assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.NOTE, notes.get(1));
+        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.NOTE, notes.get(1));
         assertEquals(",,", notes.get(1).getPrefix());
 
         notes = TsfTokenParser.parse(List.of(TsfToken.of(";-"), TsfToken.of(".")));
@@ -144,7 +147,13 @@ class TsfTokenParserTest {
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.ACCENTED, 0, TsfNote.Type.CONTINUE, notes.getFirst());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.BREAK, notes.get(1));
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of("!!"), TsfToken.of("!!")));
+        notes = TsfTokenParser.parse(List.of(TsfToken.of(":d"), TsfToken.of(".-"), TsfToken.of(",d'")));
+        assertEquals(3, notes.size());
+        assertNote(TsfNote.Length.HALF, TsfNote.Accent.NONE, 0, TsfNote.Type.NOTE, notes.getFirst());
+        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.CONTINUE, notes.get(1));
+        assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 1, TsfNote.Type.NOTE, notes.get(2));
+
+        notes = TsfTokenParser.parse(List.of(TsfToken.of("||"), TsfToken.of("!!")));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.FULL, TsfNote.Accent.DOUBLE_BAR, 0, TsfNote.Type.BREAK, notes.getFirst());
         assertNote(TsfNote.Length.UNKNOWN, TsfNote.Accent.DOUBLE_BAR, 0, TsfNote.Type.END_OF_PART, notes.get(1));
