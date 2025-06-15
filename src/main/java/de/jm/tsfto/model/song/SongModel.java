@@ -66,17 +66,16 @@ public class SongModel {
     }
 
     public String toLatex() {
-        StringBuilder sb = new StringBuilder();
-
-        for (Object line : songLines) {
-            if (line instanceof SongLine) {
-                sb.append(((SongLine) line).toLatex());
-            }
-            if (line instanceof ScorePart) {
-                sb.append(((ScorePart) line).toLatex());
+        StringBuilder latexBuilder = new StringBuilder();
+        for (Object object : getSongLines()) {
+            if (object instanceof ScorePart) {
+                latexBuilder.append(((ScorePart) object).toLatex()).append('\n');
+            }  else if (object instanceof SongLine) {
+                latexBuilder.append(((SongLine) object).toLatex()).append('\n');
+            } else {
+                throw new RuntimeException("Unknown SongModel object: " + object);
             }
         }
-
-        return sb.toString();
+        return latexBuilder.toString();
     }
 }

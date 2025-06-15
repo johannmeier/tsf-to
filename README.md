@@ -13,8 +13,6 @@
 * ,, is ., in  column  (HQQ - HH) (needed for formatting)
 * double note: d* (needed for formatting)
 * Question marks are ignored
-* empty column: *
-* 
 
 ## Symbol line
 

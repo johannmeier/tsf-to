@@ -36,7 +36,6 @@ public class TsfNote {
     }
 
     public Type getType() {
-
         if (accent == Accent.DOUBLE_BAR && length == Length.UNKNOWN) {
             return Type.END_OF_PART;
         }
@@ -86,5 +85,71 @@ public class TsfNote {
 
     public String getKeyChangeNote() {
         return keyChangeNote;
+    }
+
+
+    public boolean isContinue() {
+        return Type.CONTINUE == getType();
+    }
+
+    public boolean isBreak() {
+        return Type.BREAK == getType();
+    }
+
+    public boolean isEndOfPart() {
+        return Type.END_OF_PART == getType();
+    }
+
+    public boolean isNote() {
+        return Type.NOTE == getType();
+    }
+
+    public boolean isKeyChange() {
+        return getKeyChangeNote() != null;
+    }
+
+    public boolean isDoubleCol() {
+        return postfix.contains("*");
+    }
+
+    public boolean isTwoNotesOneColumn() {
+        return postfix.contains("+");
+    }
+
+
+    public boolean isUnderline() {
+        return postfix.contains("_");
+    }
+
+    public boolean isUnderpoint() {
+        return postfix.contains("=");
+    }
+
+    public String getUnderLength() {
+        int posOfLength = -1;
+        if (isUnderline()) {
+            posOfLength = postfix.indexOf("_");
+        } else if (isUnderpoint()) {
+            posOfLength = postfix.indexOf("=");
+        }
+
+        if  (posOfLength == -1) {
+            return "";
+        }
+
+        StringBuilder lengthBuilder = new StringBuilder();
+        for (char c : postfix.substring(posOfLength+1).toCharArray()) {
+            if ("0123456789.".contains(String.valueOf(c))) {
+                lengthBuilder.append(c);
+            } else {
+                break;
+            }
+        }
+
+        if (lengthBuilder.isEmpty()) {
+            lengthBuilder.append(1);
+        }
+
+        return lengthBuilder.toString();
     }
 }

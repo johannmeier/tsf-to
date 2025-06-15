@@ -1,5 +1,13 @@
 package de.jm.tsfto.model.song;
 
+import de.jm.tsfto.latex.Latex;
+import de.jm.tsfto.model.tsf.TsfNote;
+import de.jm.tsfto.model.tsf.TsfToken;
+import de.jm.tsfto.parser.TsfLineParser;
+import de.jm.tsfto.parser.TsfTokenParser;
+
+import java.util.List;
+
 public class NoteLine extends SongLine {
 
     public NoteLine(String line) {
@@ -8,7 +16,20 @@ public class NoteLine extends SongLine {
 
     @Override
     public String toLatex() {
-        return "TODO";
+        StringBuilder latexBuilder = new StringBuilder();
+        List<TsfNote> tsfNotes = getTsfNotes();
+        for (int i = 0; i < tsfNotes.size(); i++) {
+            if (!latexBuilder.isEmpty()) {
+                latexBuilder.append('&');
+            }
+            TsfNote tsfNote = tsfNotes.get(i);
+            if (tsfNote.isTwoNotesOneColumn()) {
+                latexBuilder.append(Latex.twoNotesOneColumnToLatex(tsfNote, tsfNotes.get(i++)));
+            } else {
+                latexBuilder.append(Latex.tsfNoteToLatex(tsfNote));
+            }
+        }
+        return latexBuilder.toString();
     }
 
     public static boolean matches(String line) {
@@ -36,5 +57,11 @@ public class NoteLine extends SongLine {
             }
         }
         return count;
+    }
+
+    public List<TsfNote> getTsfNotes() {
+        TsfLineParser tsfLineParser = new TsfLineParser(line);
+        List<TsfToken> tokens = tsfLineParser.parse();
+        return TsfTokenParser.parse(tokens);
     }
 }
