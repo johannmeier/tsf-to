@@ -14,4 +14,42 @@ class SymbolLineTest {
         assertFalse(SymbolLine.matches("T: !d .l :s, d . ;d-t :l"));
         assertFalse(SymbolLine.matches("C: !the sun shines always"));
     }
+
+    @Test
+    void getColCount() {
+        assertEquals(1, SymbolLine.getColCount("DC"));
+        assertEquals(1, SymbolLine.getColCount("*"));
+        assertEquals(1, SymbolLine.getColCount("$_DC"));
+        assertEquals(2, SymbolLine.getColCount("**"));
+        assertEquals(2, SymbolLine.getColCount("*$"));
+        assertEquals(2, SymbolLine.getColCount("$*"));
+        assertEquals(3, SymbolLine.getColCount("$>*DC"));
+    }
+
+    @Test
+    void processToken() {
+        assertEquals("", SymbolLine.processToken("*"));
+        assertEquals("DC", SymbolLine.processToken("DC"));
+        assertEquals("DC", SymbolLine.processToken("*DC"));
+        assertEquals("DC", SymbolLine.processToken("DC****"));
+        assertEquals("DC_$", SymbolLine.processToken("DC_$****"));
+        assertEquals("DC_$", SymbolLine.processToken("DC*$****"));
+        assertEquals("DC>$", SymbolLine.processToken("*DC>$****"));
+    }
+
+    @Test
+    void toLatex() {
+        assertEquals("\\hfill\\coda", new SymbolLine(">$").toLatex());
+        assertEquals("", new SymbolLine("").toLatex());
+        assertEquals("&", new SymbolLine("*").toLatex());
+        assertEquals("&&", new SymbolLine("**").toLatex());
+        assertEquals("\\multicolumn{\\coda}{2}{r}", new SymbolLine("*$").toLatex());
+        assertEquals("\\multicolumn{\\coda}{2}{l}", new SymbolLine("$*").toLatex());
+        assertEquals("\\multicolumn{\\coda \\DC}{3}{l}", new SymbolLine("$*DC").toLatex());
+        assertEquals("\\multicolumn{\\coda \\hfill\\DC}{3}{l}", new SymbolLine("$*>DC").toLatex());
+        assertEquals("&\\fer", new SymbolLine("* ^").toLatex());
+        assertEquals("&&\\fer", new SymbolLine("** ^").toLatex());
+        assertEquals("&\\multicolumn{\\DC}{2}{r}", new SymbolLine("* *DC").toLatex());
+        assertEquals("&\\fer&", new SymbolLine("* ^ *").toLatex());
+    }
 }
