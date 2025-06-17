@@ -66,7 +66,6 @@ public class TextLine extends SongLine {
         processToken = processToken.replaceAll("\\*+$", "");
         processToken = processToken.replaceAll("^[!|]+", "");
         processToken = processToken.replace('*', '_');
-//        processToken = processToken.replaceAll(" \\+", " ");
         return processToken;
     }
 

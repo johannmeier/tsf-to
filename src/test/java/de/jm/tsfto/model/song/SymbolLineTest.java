@@ -53,13 +53,13 @@ class SymbolLineTest {
         assertEquals("", new SymbolLine("").toLatex());
         assertEquals("&", new SymbolLine("*").toLatex());
         assertEquals("&&", new SymbolLine("**").toLatex());
-        assertEquals("\\multicolumn{\\coda}{2}{r}", new SymbolLine("*$").toLatex());
-        assertEquals("\\multicolumn{\\coda}{2}{l}", new SymbolLine("$*").toLatex());
-        assertEquals("\\multicolumn{\\coda \\DC}{3}{l}", new SymbolLine("$*DC").toLatex());
-        assertEquals("\\multicolumn{\\coda \\hfill\\DC}{3}{l}", new SymbolLine("$*>DC").toLatex());
+        assertEquals("\\multicolumn{2}{R}{\\coda}", new SymbolLine("*$").toLatex());
+        assertEquals("\\multicolumn{2}{L}{\\coda}", new SymbolLine("$*").toLatex());
+        assertEquals("\\multicolumn{3}{L}{\\coda \\DC}", new SymbolLine("$*DC").toLatex());
+        assertEquals("\\multicolumn{3}{L}{\\coda \\hfill\\DC}", new SymbolLine("$*>DC").toLatex());
         assertEquals("&\\fer", new SymbolLine("* ^").toLatex());
         assertEquals("&&\\fer", new SymbolLine("** ^").toLatex());
-        assertEquals("&\\multicolumn{\\DC}{2}{r}", new SymbolLine("* *DC").toLatex());
+        assertEquals("&\\multicolumn{2}{R}{\\DC}", new SymbolLine("* *DC").toLatex());
         assertEquals("&\\fer&", new SymbolLine("* ^ *").toLatex());
     }
 
