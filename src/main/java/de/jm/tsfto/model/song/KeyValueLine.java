@@ -60,6 +60,10 @@ public class KeyValueLine extends SongLine {
         return getValue(line);
     }
 
+    public static boolean isKeyValue(String token) {
+        return token.indexOf(":") > 0 && token.length() > 2;
+    }
+
     public static String getValue(String line) {
         int posOfColon = line.indexOf(':');
         if (posOfColon == -1) {

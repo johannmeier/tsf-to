@@ -1,12 +1,18 @@
 package de.jm.tsfto.model.song;
 
+import de.jm.tsfto.parser.SymbolParser;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static de.jm.tsfto.model.song.KeyValueLine.*;
+
 public class SymbolLine extends SongLine {
 
     private static Map<String, String> symbolToLatex = new HashMap<>();
+
     static {
         symbolToLatex.put("cresc", "\\cresc");
         symbolToLatex.put("decresc", "\\decresc");
@@ -33,6 +39,15 @@ public class SymbolLine extends SongLine {
 
         symbolToLatex.put(">", "\\hfill");
         symbolToLatex.put("_", " ");
+        symbolToLatex.put("*", "&");
+    }
+
+    private static Map<String, String> keyValueToLatex = new HashMap<>();
+
+    static {
+        keyValueToLatex.put("b:", "\\mnbr{%s}");
+        keyValueToLatex.put("p:", "\\tpart{%s}");
+        keyValueToLatex.put("key:", "\\key{%s}");
     }
 
 
@@ -51,7 +66,7 @@ public class SymbolLine extends SongLine {
 
         for (String token : tokens) {
             int cols = getColCount(token);
-            String aligned = isRightAligned(token) ? "r" : "l";
+            String aligned = isRightAligned(token) ? "R" : "L";
             String processedToken = processToken(token);
             processedToken = fillSymbols(processedToken);
             if (processedToken.isEmpty()) {
@@ -63,7 +78,7 @@ public class SymbolLine extends SongLine {
                 if (cols == 1) {
                     latexBuilder.append(processedToken);
                 } else {
-                    latexBuilder.append("\\multicolumn{%s}{%s}{%s}".formatted(processedToken, cols, aligned));
+                    latexBuilder.append("\\multicolumn{%s}{%s}{%s}".formatted(cols, aligned, processedToken));
                 }
             }
         }
@@ -79,11 +94,48 @@ public class SymbolLine extends SongLine {
     }
 
     static String fillSymbols(String token) {
-        String processedToken = token;
-        for (String symbol : symbolToLatex.keySet()) {
-            processedToken = processedToken.replace(symbol, symbolToLatex.get(symbol));
+        StringBuilder latexBuilder = new StringBuilder();
+        List<String> parts = SymbolParser.parse(token);
+        for (String part : parts) {
+            if (symbolToLatex.containsKey(part)) {
+                latexBuilder.append(symbolToLatex.get(part));
+            } else {
+                if (isKeyValue(part)) {
+                    String key = getKey(part) + ":";
+                    if (keyValueToLatex.containsKey(key)) {
+                        latexBuilder.append(keyValueToLatex.get(key).formatted(getValue(part)));
+                    }
+                }
+                else {
+                    latexBuilder.append("\\sign{%s}".formatted(part));
+                }
+            }
         }
-        return processedToken;
+
+        return latexBuilder.toString();
+    }
+
+    static String[] knownKeyValues = {"b:", "p:", "key:"};
+
+    static List<String> getKeyValues(String processedToken) {
+        List<String> keyValues = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        for (String knownKeyValue : knownKeyValues) {
+            int posKey = processedToken.indexOf(knownKeyValue);
+            if (posKey != -1) {
+                for (int pos = posKey + knownKeyValue.length(); pos < processedToken.length(); pos++) {
+                    char c = processedToken.charAt(pos);
+                    if (c == '_' || c == ' ') {
+                        break;
+                    } else {
+                        sb.append(c);
+                    }
+                }
+                keyValues.add(knownKeyValue + sb);
+                sb = new StringBuilder();
+            }
+        }
+        return keyValues;
     }
 
     static int getColCount(String token) {

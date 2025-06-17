@@ -2,6 +2,8 @@ package de.jm.tsfto.model.song;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class SymbolLineTest {
@@ -38,7 +40,15 @@ class SymbolLineTest {
     }
 
     @Test
+    void fillSymbols() {
+        assertEquals("\\mnbr{50}", SymbolLine.fillSymbols("b:50"));
+        assertEquals("\\tpart{A}", SymbolLine.fillSymbols("p:A"));
+    }
+
+    @Test
     void toLatex() {
+        assertEquals("\\tpart{A}&\\sign{hello}", new SymbolLine("p:A * hello").toLatex());
+        assertEquals("\\tpart{A} \\fer", new SymbolLine("p:A_^").toLatex());
         assertEquals("\\hfill\\coda", new SymbolLine(">$").toLatex());
         assertEquals("", new SymbolLine("").toLatex());
         assertEquals("&", new SymbolLine("*").toLatex());
@@ -52,4 +62,28 @@ class SymbolLineTest {
         assertEquals("&\\multicolumn{\\DC}{2}{r}", new SymbolLine("* *DC").toLatex());
         assertEquals("&\\fer&", new SymbolLine("* ^ *").toLatex());
     }
+
+    @Test
+    void getKeyValues() {
+        List<String> keyValues = SymbolLine.getKeyValues("hurz:50");
+        assertEquals(0, keyValues.size());
+
+        keyValues = SymbolLine.getKeyValues("b:50");
+        assertEquals(1, keyValues.size());
+        assertEquals("b:50", keyValues.getFirst());
+
+        keyValues = SymbolLine.getKeyValues("p:A");
+        assertEquals(1, keyValues.size());
+        assertEquals("p:A", keyValues.getFirst());
+
+        keyValues = SymbolLine.getKeyValues("key:A");
+        assertEquals(1, keyValues.size());
+        assertEquals("key:A", keyValues.getFirst());
+
+        keyValues = SymbolLine.getKeyValues("b:50_key:A");
+        assertEquals(2, keyValues.size());
+        assertEquals("b:50", keyValues.getFirst());
+        assertEquals("key:A", keyValues.get(1));
+    }
+
 }

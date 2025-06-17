@@ -38,7 +38,8 @@
 | \>   | filler (right>left*7 box 7 columns 'right' right aligned and 'left' left aligned) |
 | _    | space |
 | *    | empty column |
-
+| b:int | Bar number |
+| p:int | Song Part, e.g. A,B,C |
 
 ## Text lines
 
