@@ -13,6 +13,16 @@ public abstract class SongLine {
 
     public abstract String toLatex();
 
+    public boolean isEndRow() {
+        return line != null && (line.endsWith("!!") || line.endsWith("||"));
+    }
+
+    public void removeEndRowSigns() {
+        if (isEndRow()) {
+            line = line.replaceFirst(" *[|!][|!]$", "");
+        }
+    }
+
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + "{" +

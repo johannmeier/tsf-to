@@ -1,7 +1,7 @@
 package de.jm.tsfto.latex;
 
+import de.jm.tsfto.model.song.NoteLine;
 import de.jm.tsfto.model.tsf.TsfNote;
-import de.jm.tsfto.parser.TsfLineParser;
 import de.jm.tsfto.parser.TsfTokenParser;
 import org.junit.jupiter.api.Test;
 
@@ -69,9 +69,7 @@ public class NoteLineToLatexTest {
 
     }
 
-
     private List<TsfNote> lineToTsfNotes(String line) {
-        TsfLineParser tsfLineParser = new TsfLineParser(line);
-        return TsfTokenParser.parse(tsfLineParser.parse());
+        return TsfTokenParser.parse(NoteLine.getTokens(line));
     }
 }

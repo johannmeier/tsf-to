@@ -105,7 +105,7 @@ public class TsfNote {
     }
 
     public boolean isKeyChange() {
-        return getKeyChangeNote() != null;
+        return getKeyChangeNote() != null && !getKeyChangeNote().isEmpty();
     }
 
     public boolean isDoubleCol() {

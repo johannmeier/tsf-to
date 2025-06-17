@@ -2,8 +2,6 @@ package de.jm.tsfto.model.song;
 
 import de.jm.tsfto.latex.Latex;
 import de.jm.tsfto.model.tsf.TsfNote;
-import de.jm.tsfto.model.tsf.TsfToken;
-import de.jm.tsfto.parser.TsfLineParser;
 import de.jm.tsfto.parser.TsfTokenParser;
 
 import java.util.List;
@@ -19,9 +17,6 @@ public class NoteLine extends SongLine {
         StringBuilder latexBuilder = new StringBuilder();
         List<TsfNote> tsfNotes = getTsfNotes();
         for (int i = 0; i < tsfNotes.size(); i++) {
-            if (!latexBuilder.isEmpty()) {
-                latexBuilder.append('&');
-            }
             TsfNote tsfNote = tsfNotes.get(i);
             if (tsfNote.isTwoNotesOneColumn()) {
                 latexBuilder.append(Latex.twoNotesOneColumnToLatex(tsfNote, tsfNotes.get(i++)));
@@ -60,8 +55,10 @@ public class NoteLine extends SongLine {
     }
 
     public List<TsfNote> getTsfNotes() {
-        TsfLineParser tsfLineParser = new TsfLineParser(line);
-        List<TsfToken> tokens = tsfLineParser.parse();
-        return TsfTokenParser.parse(tokens);
+        return TsfTokenParser.parse(getTokens(line));
+    }
+
+    public static List<String> getTokens(String line) {
+        return List.of(line.split(" +"));
     }
 }

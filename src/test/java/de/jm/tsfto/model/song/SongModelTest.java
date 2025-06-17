@@ -35,4 +35,10 @@ class SongModelTest {
         SongModel songModel = SongModel.parse("tsf/HaveANiceDay.tsf");
         songModel.getSongLines().forEach(System.out::println);
     }
+
+    @Test
+    void toLatex() {
+        SongModel songModel = SongModel.parse("tsf/HaveANiceDay.tsf");
+        System.out.println(songModel.toLatex());
+    }
 }

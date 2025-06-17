@@ -17,7 +17,7 @@ public class KeyValueLine extends SongLine {
         keyToLatex.put("c", "%% %s"); // comment
         keyToLatex.put("K", "\\renewcommand\\SongPitch{%s}"); // key
         keyToLatex.put("latex", "%s");
-        keyToLatex.put("sql", "\\setqlength{%spt}");
+        keyToLatex.put("sql", "\\setqlength{%s}");
         keyToLatex.put("left", "left=%s");
         keyToLatex.put("right", "right=%s");
         keyToLatex.put("top", "top=%s");

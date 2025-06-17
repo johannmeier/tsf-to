@@ -1,0 +1,455 @@
+\ProvidesPackage{tonic-solfa}
+
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{graphicx} % \rotatebox
+\usepackage{bigdelim}
+\usepackage{tikz}
+\usepackage{multicol}
+\usepackage{amsmath}
+
+\IfFileExists{lilyglyphs.sty}
+{
+\usepackage{lilyglyphs}
+\usepackage{fontspec} % Is necessary to access OpenType fonts
+}
+
+\newcommand\todo[1]{\textcolor{red}{#1}}
+
+\newcommand\sign[1]{{\rmfamily\textbf{\emph{#1}}}}
+\newcommand\refrain{\sign{Refrain}}
+\newcommand\solo{\sign{Solo}}
+\newcommand\fine{\sign{fine}}
+
+\newlength{\qlength}
+\newlength{\hlength}
+\newlength{\flength}
+\newlength{\tlength}
+\newlength{\elength}
+
+\newcommand\setqlength[1] {
+\setlength{\flength}{#1}%
+\setlength{\hlength}{#1 / 2}%
+\setlength{\qlength}{#1 / 4}%
+\setlength{\elength}{#1 / 8}%
+\setlength{\tlength}{#1 / 3}%
+}
+
+\newcommand\setelength[1] {
+\setlength{\elength}{#1}%
+\setlength{\qlength}{#1 * 2}%
+\setlength{\hlength}{#1 * 4}%
+\setlength{\flength}{#1 * 8}%
+\setlength{\tlength}{\flength / 3}%
+}
+
+\newcolumntype{P}[1]{@{}m{#1}@{}} % no padding
+\newcolumntype{F}{P{\flength}}
+\newcolumntype{H}{P{\hlength}}
+\newcolumntype{Q}{P{\qlength}}
+\newcolumntype{E}{P{\elength}}
+\newcolumntype{T}{P{\tlength}}
+\newcolumntype{L}{@{}l@{}}
+\newcolumntype{R}{@{}r@{}}
+\newcolumntype{C}{@{}c@{}}
+\newcolumntype{B}{@{}m{0.8em}@{}}
+
+\newcommand\flc{\the\flength} % Full Length Column
+
+\newlength{\toniclen}
+\newlength{\textlenght}
+
+\newcommand\calclen[2]{%
+\settowidth\textlenght{#1}%
+\setlength\toniclen{#2 - \textlenght}%
+}
+
+%
+% underline
+%
+% 1. ist Text
+% 2. ist die Länge von hspace
+\newcommand\ul[2]{%
+\calclen{#1}{#2}%
+\rlap{%
+\uline{#1\hspace{\toniclen - 3px}}%
+}%
+}
+
+%
+% underpoint
+%
+% 1. ist Text
+% 2. ist die Länge von hspace
+\newcommand\up[2]{%
+\calclen{#1}{#2}%
+\rlap{%
+\dotuline{#1\hspace{\toniclen - 3px}}%
+}%
+}
+
+%
+% Tonic Sol-fa signs
+%
+\newcommand\hit[1]{\textsuperscript{#1}} % High Text
+\newcommand\hi[2][1]{#2\textsuperscript{\tiny #1}}
+\newcommand\lo[2][1]{#2\textsubscript{\tiny #1}}
+%\newcommand\lo[2][1]{#2$\hspace{0.1em}\rule[-0.2em]{0.1em}{4pt}$}
+\newcommand\vbar{\vrule} % vertical bar
+\newcommand\dbar{\vrule\hspace{1pt}\vrule} % double bar
+\newcommand\ns{:} % No Accent
+\newcommand\as{\textbar} % Accent Symbol
+\newcommand\ms{\hspace{1.6px}\vrule\hspace{1.3px}} % Measure Symbol
+\newcommand\ds{\dbar\hspace{1.3px}} % Double bar Symbol
+\newcommand\hs{.} % Half Symbol
+\newcommand\qs{,} % Quarter Symbol
+\newcommand\es{~} % Eights Symbol
+\newcommand\ts{\rotatebox{180}{,}} % Third Symbol
+\newcommand\cs{\textendash} % Continue Symbol
+
+\newcommand\key[1]{\textbf{\footnotesize{Key}\,\small{#1}}}
+
+%
+% notes
+%
+\newcommand\kc[2]{\hit{#1}\hspace{1.3px}#2} % Key Change
+\newcommand\dkc[2]{\ds\hit{#1}\hspace{1.3px}#2} % Key Change
+\newcommand\mkc[2]{\ms\hit{#1}\hspace{1.3px}#2} % Key Change
+\newcommand\akc[2]{\as\hit{#1}\hspace{1.3px}#2} % Key Change
+\newcommand\nkc[2]{\hit{#1}\hspace{1.3px}#2} % Key Change
+
+\newcommand\pn[1]{#1} % Plain Note
+\newcommand\ph[1]{\hi{#1}} % Plain High Note
+\newcommand\pl[1]{\lo{#1}} % Plain Low Note
+\newcommand\dpn[1]{\multicolumn{2}{L}{#1}} % Double Plain Note
+
+\newcommand\nn[1]{\ns #1} % Normal Note
+\newcommand\nnu[2][1]{\ns \ul{#2}{\flc*\real{#1}}} % Normal Note Underline
+\newcommand\nnp[2][1]{\ns \up{#2}{\flc*\real{#1}}} % Normal Note underPoint
+\newcommand\nh[2][1]{\ns\hi[#1]{#2}} % Note High
+\newcommand\nhu[2][1]{\ns \ul{\hi{#2}}{\flc*\real{#1}}} % Normal High Underline
+\newcommand\nhp[2][1]{\ns \up{\hi{#2}}{\flc*\real{#1}}} % Normal High underPoint
+\newcommand\nl[2][1]{\ns\lo[#1]{#2}} % Note Low
+\newcommand\nlu[2][1]{\ns \ul{\lo{#2}}{\flc*\real{#1}}} % Normal Low Underline
+\newcommand\nlp[2][1]{\ns \up{\lo{#2}}{\flc*\real{#1}}} % Normal Low underPoint
+\newcommand\dnn[1]{\multicolumn{2}{L}{\ns #1}} % Double Normal Normal
+\newcommand\dnh[1]{\multicolumn{2}{L}{\ns\hi{#1}}} % Double Normal High
+\newcommand\dnl[1]{\multicolumn{2}{L}{\ns\lo{#1}}} % Double Normal Low
+\newcommand\tnn[1]{\multicolumn{t}{L}{\ns #1}} % Triple Normal Normal
+
+\newcommand\an[1]{\as #1} % Accented Note
+\newcommand\anu[2][1]{\as \ul{#2}{\flc*\real{#1}}} % Accented Note Underline
+\newcommand\anp[2][1]{\as \up{#2}{\flc*\real{#1}}} % Accented Note underPoint
+\newcommand\ah[2][1]{\as\hi[#1]{#2}} % Accented High
+\newcommand\ahu[2][1]{\as \ul{\hi{#2}}{\flc*\real{#1}}} % Accented High Underline
+\newcommand\ahp[2][1]{\as \up{\hi{#2}}{\flc*\real{#1}}} % Accented High underPoint
+\newcommand\al[2][1]{\as\lo[#1]{#2}} % Accented Low
+\newcommand\alu[2][1]{\as \ul{\lo{#2}}{\flc*\real{#1}}} % Accented Low Underline
+\newcommand\alp[2][1]{\as \up{\lo{#2}}{\flc*\real{#1}}} % Accented Low underPoint
+\newcommand\dan[1]{\multicolumn{2}{L}{\as #1}} % Double Accented Normal
+\newcommand\dah[1]{\multicolumn{2}{L}{\as\hi{#1}}} % Double Accented High
+\newcommand\dal[1]{\multicolumn{2}{L}{\as\lo{#1}}} % Double Accented Low
+\renewcommand\tan[1]{\multicolumn{3}{L}{\as #1}} % Triple Accented Normal
+
+\newcommand\mn[1]{\ms #1} % Measure Note
+\newcommand\mnu[2][1]{\ms \ul{#2}{\flc*\real{#1}}} % Measure Note Underline
+\newcommand\mnp[2][1]{\ms \up{#2}{\flc*\real{#1}}} % Measure Note underPoint
+\newcommand\mh[2][1]{\ms\hi[#1]{#2}} % Measure High
+\newcommand\mhu[2][1]{\ms \ul{\hi{#2}}{\flc*\real{#1}}} % Measure High Underline
+\newcommand\mhp[2][1]{\ms \up{\hi{#2}}{\flc*\real{#1}}} % Measure High underPoint
+\newcommand\ml[2][1]{\ms\lo[#1]{#2}} % Measure Low
+\newcommand\mlu[2][1]{\ms \ul{\lo{#2}}{\flc*\real{#1}}} % Measure Low Underline
+\newcommand\mlp[2][1]{\ms \up{\lo{#2}}{\flc*\real{#1}}} % Measure Low underPoint
+\newcommand\dmn[1]{\multicolumn{2}{L}{\ms #1}} % Double Measure Normal
+\newcommand\dmh[1]{\multicolumn{2}{L}{\ms\hi{#1}}} % Double Measure High
+\newcommand\dml[1]{\multicolumn{2}{L}{\ms\lo{#1}}} % Double Measure Low
+\newcommand\tmn[1]{\multicolumn{3}{L}{\ms #1}} % Triple Measure Normal
+\newcommand\fmn[1]{\multicolumn{4}{L}{\ms #1}} % Four Measure Normal
+
+\let\olddh\dh
+\newcommand\dn[1]{\ds #1} % Double bar Note
+\newcommand\dnu[2][1]{\ds \ul{#2}{\flc*\real{#1}}} % Double Measure Note Underline
+\newcommand\dnp[2][1]{\ds \up{#2}{\flc*\real{#1}}} % Double Measure Note underPoint
+\renewcommand\dh[2][1]{\ds\hi[#1]{#2}} % Double Measure High
+\newcommand\dhu[2][1]{\ds \ul{\hi{#2}}{\flc*\real{#1}}} % Double Measure High Underline
+\newcommand\dhp[2][1]{\ds \up{\hi{#2}}{\flc*\real{#1}}} % Double Measure High underPoint
+\newcommand\dl[2][1]{\ds\lo[#1]{#2}} % Double Measure Low
+\newcommand\dlu[2][1]{\ds \ul{\lo{#2}}{\flc*\real{#1}}} % Double Measure Low Underline
+\newcommand\dlp[2][1]{\ds \up{\lo{#2}}{\flc*\real{#1}}} % Double Measure Low underPoint
+
+\newcommand\en[1]{\es #1} % Eights Note
+\newcommand\enu[2][1]{\es \ul{#2}{\flc*\real{#1}}} % Eights Note Underline
+\newcommand\enp[2][1]{\es \up{#2}{\flc*\real{#1}}} % Eights Note underPoint
+\newcommand\eh[2][1]{\es\hi[#1]{#2}} % Eights Note High
+\newcommand\ehu[2][1]{\es \ul{\hi{#2}}{\flc*\real{#1}}} % Eights High Underline
+\newcommand\ehp[2][1]{\es \up{\hi{#2}}{\flc*\real{#1}}} % Eights High underPoint
+\newcommand\el[2][1]{\es\lo[#1]{#2}} % Eights Note Low
+\newcommand\elu[2][1]{\es \ul{\lo{#2}}{\flc*\real{#1}}} % Eights Low Underline
+\newcommand\elp[2][1]{\es \up{\lo{#2}}{\flc*\real{#1}}} % Eights Low underPoint
+
+\newcommand\qn[1]{\qs #1} % Quarter Note
+\newcommand\qnu[2][1]{\qs \ul{#2}{\flc*\real{#1}}} % Quarter Note Underline
+\newcommand\qnp[2][1]{\qs \up{#2}{\flc*\real{#1}}} % Quarter Note underPoint
+\newcommand\qh[2][1]{\qs\hi[#1]{#2}} % Quarter Note High
+\newcommand\qhu[2][1]{\qs \ul{\hi{#2}}{\flc*\real{#1}}} % Quarter High Underline
+\newcommand\qhp[2][1]{\qs \up{\hi{#2}}{\flc*\real{#1}}} % Quarter High underPoint
+\newcommand\ql[2][1]{\qs\lo[#1]{#2}} % Quarter Note Low
+\newcommand\qlu[2][1]{\qs \ul{\lo{#2}}{\flc*\real{#1}}} % Quarter Low Underline
+\newcommand\qlp[2][1]{\qs \up{\lo{#2}}{\flc*\real{#1}}} % Quarter Low underPoint
+
+\newcommand\hn[1]{\hs{#1}} % Half Note
+\newcommand\hnu[2][1]{\hs \ul{#2}{\flc*\real{#1}}} % Double Note Underline
+\newcommand\hnp[2][1]{\hs \up{#2}{\flc*\real{#1}}} % Double Note underPoint
+\newcommand\hh[2][1]{\hs\hi[#1]{#2}} % Half Note High
+\newcommand\hhu[2][1]{\hs \ul{\hi{#2}}{\flc*\real{#1}}} % Double High Underline
+\newcommand\hhp[2][1]{\hs \up{\hi{#2}}{\flc*\real{#1}}} % Double High underPoint
+\newcommand\hl[2][1]{\hs\lo[#1]{#2}} % Half Note Low
+\newcommand\hlu[2][1]{\hs \ul{\lo{#2}}{\flc*\real{#1}}} % Double Low Underline
+\newcommand\hlp[2][1]{\hs \up{\lo{#2}}{\flc*\real{#1}}} % Double Low underPoint
+\newcommand\dhn[1]{\multicolumn{2}{L}{\hs #1}} % Double Half Note
+\newcommand\dhh[1]{\multicolumn{2}{L}{\hs \hi{#1}}} % Double Half High
+\newcommand\dhl[1]{\multicolumn{2}{L}{\hs \lo{#1}}} % Double Half Low
+
+\let\oldth\th
+\newcommand\tn[1]{\ts #1} % Third Note
+\newcommand\tnu[2][1]{\ts \ul{#2}{\flc*\real{#1}}} % Third Note Underline
+\newcommand\tnp[2][1]{\ts \up{#2}{\flc*\real{#1}}} % Third Note underPoint
+\renewcommand\th[2][1]{\ts \hi[#1]{#2}} % Third Note High
+\newcommand\thu[2][1]{\ts \ul{\hi{#2}}{\flc*\real{#1}}} % Third High Underline
+\newcommand\thp[2][1]{\ts \up{\hi{#2}}{\flc*\real{#1}}} % Third High underPoint
+\newcommand\tl[2][1]{\ts \lo[#1]{#2}} % Third Note Low
+\newcommand\tlu[2][1]{\ts \ul{\lo{#2}}{\flc*\real{#1}}} % Third Low Underline
+\newcommand\tlp[2][1]{\ts \up{\lo{#2}}{\flc*\real{#1}}} % Third Low underPoint
+\newcommand\ttn[1]{\hfill\ts&\ts #1} % Third Third Normal
+\newcommand\tth[1]{\hfill\ts&\ts \hi{#1}} % Third Third High
+\newcommand\ttl[1]{\hfill\ts&\ts \lo{#1}} % Third Third Low
+\newcommand\ttnu[2][1]{\hfill\ts&\ts \ul{#2}{\flc*\real{#1}}} % Third Third Normal
+\newcommand\tthu[2][1]{\hfill\ts&\ts \ul{\hi{#2}}{\flc*\real{#1}}} % Third Third High
+\newcommand\ttlu[2][1]{\hfill\ts&\ts \ul{\lo{#2}}{\flc*\real{#1}}} % Third Third Low
+\newcommand\ttnp[2][1]{\hfill\ts&\ts \up{#2}{\flc*\real{#1}}} % Third Third Normal
+\newcommand\tthp[2][1]{\hfill\ts&\ts \up{\hi{#2}}{\flc*\real{#1}}} % Third Third High
+\newcommand\ttlp[2][1]{\hfill\ts&\ts \up{\lo{#2}}{\flc*\real{#1}}} % Third Third Low
+
+\newcommand\hqn[1]{\hfill\hs&\qs#1} % Half Quarter Normal
+\newcommand\hqh[1]{\hfill\hs&\qs\hi{#1}} % Half Quarter High
+\newcommand\hql[1]{\hfill\hs&\qs\lo{#1}} % Half Quarter Low
+\newcommand\hqen[1]{\hfill\hs&\qs#1} % Half Quarter End Normal
+\newcommand\hqnu[2][1]{\hfill\hs&\qs\ul{#2}{\flc*\real{#1}}} % Half Quarter Note Underline
+\newcommand\hqlu[2][1]{\hfill\hs&\qs\ul{\lo{#2}}{\flc*\real{#1}}} % Half Quarter Note Low Underline
+\newcommand\hqhu[2][1]{\hfill\hs&\qs\ul{\hi{#2}}{\flc*\real{#1}}} % Half Quarter Note High Underline
+\newcommand\hqnp[2][1]{\hfill\hs&\qs\up{#2}{\flc*\real{#1}}} % Half Quarter Note Underpoint
+\newcommand\hqlp[2][1]{\hfill\hs&\qs\up{\lo{#2}}{\flc*\real{#1}}} % Half Quarter Note Low Underpoint
+\newcommand\hqhp[2][1]{\hfill\hs&\qs\up{\hi{#2}}{\flc*\real{#1}}} % Half Quarter Note High Underpoint
+
+\newcommand\hhqn[1]{\hfill\hs\qs#1\,} % Half Half Quarter Normal  ".,d" at end of half
+\newcommand\hhqh[1]{\hfill\hs\qs\hi{#1}\,} % Half Half Quarter High
+\newcommand\hhql[1]{\hfill\hs\qs\lo{#1}\,} % Half Half Quarter Low
+
+%
+% text
+%
+\newcommand\stfs{} % Song Text Font Size, e.g. \tiny, \scriptsize, \footnotesize, \small, \normalsize, 6pt
+\newcommand\st[1]{{\stfs \bfseries{#1}}} % Song Text
+
+\newcommand\nt[1]{\ \st{#1}&} % Normal Text
+\newcommand\ntr[1]{\hfill\st{#1}&} % Normal Text Right
+\newcommand\dnt[1]{\multicolumn{2}{L}{\st{#1}} &} % Double Normal Text
+\newcommand\dntr[1]{\multicolumn{2}{R}{\st{#1}} &} % Double Normal Text Right
+\newcommand\dntc[1]{\multicolumn{2}{C}{\st{#1}} &} % Double Normal Text Center
+\newcommand\dnetr[1]{\multicolumn{2}{R}{\st{#1}}} % Double Normal End Text Right
+\newcommand\tnt[1]{\multicolumn{3}{L}{\st{#1}} &} % Triple Normal Text
+\newcommand\tntr[1]{\multicolumn{3}{R}{\st{#1}} &} % Triple Normal Text Right
+\newcommand\fnt[1]{\multicolumn{4}{L}{\st{#1}} &} % Four Normal Text
+\newcommand\vnt[1]{\multicolumn{5}{L}{\st{#1}} &} % fiVe Normal Text
+\newcommand\fntr[1]{\multicolumn{4}{R}{\st{#1}} &} % Four Normal Text Right
+\newcommand\vntr[1]{\multicolumn{5}{R}{\st{#1}} &} % fiVe Normal Text Right
+
+\newcommand\mt[1]{\ms\st{#1}&} % Measure Text
+\newcommand\mtr[1]{\ms\hfill\st{#1} &} % Measure Text Right
+\newcommand\dmt[1]{\multicolumn{2}{L}{\ms\st{#1}} &} % Double Measure Text
+\newcommand\dmtr[1]{\multicolumn{2}{R}{\ms\hfill\st{#1}} &} % Double Measure Text
+\newcommand\tmt[1]{\multicolumn{3}{L}{\ms\st{#1}} &} % Triple Measure Text
+\newcommand\tmtr[1]{\multicolumn{3}{L}{\ms\hfill\st{#1}} &} % Triple Measure Text Right
+\newcommand\fmt[1]{\multicolumn{4}{L}{\ms\st{#1}} &} % Four Measure Text
+\newcommand\fmtr[1]{\multicolumn{4}{L}{\ms\hfill\st{#1}} &} % Four Measure Text
+\newcommand\vmt[1]{\multicolumn{5}{L}{\ms\st{#1}} &} % fiVe Measure Text
+
+\newcommand\dt[1]{\ds\st{#1} &} % Double Bar Text
+\newcommand\ddt[1]{\multicolumn{2}{L}{\ds \st{#1}} &} % Double Double Measure Text
+\newcommand\ddtr[1]{\multicolumn{2}{R}{\ds\hfill\st{#1}} &} % Double Normal Text Right
+\newcommand\tdt[1]{\multicolumn{3}{L}{\ds \st{#1}} &} % Double Double Measure Text
+\newcommand\fdt[1]{\multicolumn{3}{L}{\ds \st{#1}} &} % Double Double Measure Text
+
+\newcommand{\mct}[2]{\multicolumn{#1}{L}{\st{#2}} &} % Multi Column Text
+\newcommand{\mcnt}[2]{\multicolumn{#1}{L}{\st{#2}} &} % Multi Column Normal Text
+\newcommand{\mcntr}[2]{\multicolumn{#1}{L}{\hfill\st{#2}} &} % Multi Column Normal Text Right
+\newcommand{\mcmt}[2]{\multicolumn{#1}{L}{\ms\st{#2}} &} % Multi Column Measure Text
+\newcommand{\mcmtr}[2]{\multicolumn{#1}{L}{\ms\hfill\st{#2}} &} % Multi Column Measure Text Right
+\newcommand{\mcdt}[2]{\multicolumn{#1}{L}{\ds\st{#2}} &} % Multi Column Double Measure Text
+\newcommand{\mcdtr}[2]{\multicolumn{#1}{L}{\ds\hfill\st{#2}} &} % Multi Column Double Measure Text Right
+
+\newcommand{\muc}[2][2]{\multicolumn{#1}{L}{#2} &} % MUlti Column
+\newcommand{\mdc}[1]{\multicolumn{2}{L}{\ms #1} &} % Measure Double Column
+\newcommand{\ndc}[1]{\multicolumn{2}{L}{\ns #1} &} % Normal Double Column
+
+\newcommand{\multi}[1]{\multicolumn{2}{L}{#1}} % MUlti Column
+
+%
+% continues
+%
+
+\newcommand\ac{\as\cs} % Accented Continue
+\newcommand\dac{\as\cs} % Double Accented Continue
+\newcommand\mc{\ms\cs} % Measure Continue
+\newcommand\dmc{\ms\cs} % Double Measure Continue
+\newcommand\nc{\ns\cs} % Normal Continue
+\newcommand\dnc{\ns\cs} % Double Normal Continue
+\newcommand\hc{\hs\cs} % Half Continue
+\newcommand\tc{\ts\cs} % Third Continue
+\newcommand\qc{\qs\cs} % Quarter Continue
+\newcommand\dc{\ds\cs} % Double Measure Continue
+
+%
+% breaks
+%
+
+\newcommand\mb{\ms} % Measure Break
+\newcommand\db{\ds} % Double Measure Break
+\newcommand\dmb{\ms &} % Double Measure Break
+\newcommand\ab{\as} % Accented Break
+\newcommand\dab{\as &} % Double Accented Break
+\newcommand\nb{\ns} % Normal Break
+\newcommand\dnb{\ns &} % Double Normal Break
+\newcommand\hb{\hs} % Half Break
+\newcommand\dhb{\hs &} % Double Half Break
+\newcommand\qb{\qs} % Quarter Break
+\newcommand\tb{\ts} % Third Break
+\newcommand\ttb{\hfill\ts&\ts} % Third Break
+\newcommand\hqb{\hfill\hs&\qs} % Quarter Break
+
+%
+% Dynamic
+%
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lf{\hspace{0.3em}\lilyDynamics{f}}} % Lautstaerke Forte
+{\newcommand\lf{{\rmfamily\footnotesize \textbf{\emph{f}}}}} % Lautstaerke Forte
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lff{\hspace{0.3em}\lilyDynamics{ff}}} % Lautstaerke Forte Fortissimus
+{\newcommand\lff{{\rmfamily\footnotesize \textbf{\emph{ff}}}}} % Lautstaerke Forte Fortissimus
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lmf{\hspace{0.3em}\lilyDynamics{mf}}} % Lautstaerke Mezzo Forte
+{\newcommand\lmf{{\rmfamily\footnotesize \textbf{\emph{mf}}}}} % Lautstaerke Mezzo Forte
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lp{\hspace{0.3em}\lilyDynamics{p}}} % Lautstaerke Piano
+{\newcommand\lp{{\rmfamily\footnotesize \textbf{\emph{p}}}}} % Lautstaerke Piano
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lmp{\hspace{0.3em}\lilyDynamics{mp}}} % Lautstaerke Mezzo Piano
+{\newcommand\lmp{{\rmfamily\footnotesize \textbf{\emph{mp}}}}} % Lautstaerke Mezzo Piano
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lpp{\hspace{0.3em}\lilyDynamics{pp}}} % Lautstaerke Piano Pianissimo
+{\newcommand\lpp{{\rmfamily\footnotesize \textbf{\emph{pp}}}}} % Lautstaerke Piano Pianissimo
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\lppp{\hspace{0.3em}\lilyDynamics{ppp}}} % Lautstaerke Piano Pianissimo
+{\newcommand\lppp{{\rmfamily\footnotesize \textbf{\emph{ppp}}}}} % Lautstaerke Piano Pianissimo
+
+%
+% Repeats
+%
+
+\newcommand\rdc{{\rmfamily\footnotesize \textbf{\emph{DC}}}} % Repeats Da Capo
+\newcommand\rds{{\rmfamily\footnotesize \textbf{\emph{DS}}}} % Repeats Dal Segno
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\coda{\hspace{0.5em}\lilyGlyph[raise=0.7,scale=1.3]{scripts.coda}}} % Coda
+{\newcommand\coda{c}} % Coda
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\rse{\hspace{0.5em}\lilyGlyph[raise=0.7]{scripts.segno}}} % Repeats SEgno
+{\newcommand\rse{\%}} % Repeats SEgno
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\fer{\hspace{0.5em}\fermata}} % FERmata
+{\newcommand\fer{\textasteriskcentered}} % FERmata
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\kfl{{\small \flat}}} % Key FLat
+{\newcommand\kfl{{\rmfamily\footnotesize \textbf{\emph{b}}}}} % Key FLat
+
+\IfFileExists{lilyglyphs.sty}
+{\newcommand\ksh{{\small \sharp}}} % Key Sharp
+{\newcommand\ksh{{\rmfamily\footnotesize \textbf{\emph{#}}}}} % Key Sharp
+
+\newcommand\decresc{\sign{decresc}}
+\newcommand\cresc{\sign{cresc}}
+
+\newcommand\decrescsign{\hspace{0.3em}\decrescHairpin}
+\newcommand\crescsign{\hspace{0.3em}\crescHairpin}
+
+\newcommand{\tpart}[1]{%
+    \begingroup%
+    \setlength{\fboxsep}{1pt}%
+    \setlength{\fboxrule}{0.5pt}%
+    \ensuremath{\fbox{#1}}%
+    \endgroup % Group safe lengths
+}%
+
+\newcommand\tpartcircle[1]{%
+    \tikz[baseline=(char.base)]{%
+        \node[shape=circle,draw,inner sep=0.3pt] (char) {#1};}%
+}
+
+\newcommand{\tstack}[2]{%
+    \begingroup%
+    \raisebox{-.3em}{\footnotesize\shortstack{#1\\#2}}%
+    \endgroup % Group safe lengths
+}%
+
+\newcommand{\tstackl}[2]{%
+    \begingroup%
+    \large$\substack{#1\\#2}$
+    \endgroup % Group safe lengths
+}%
+
+\newenvironment{tonic-row}[2]
+{
+    \setlength{\parskip}{0pt}
+    \begin{minipage}{\textwidth}
+    {\vphantom{}\hspace{1em}#1}\\
+    $ %
+    \left\{
+        \begin{tabular}{#2}
+        }
+        {
+        \end{tabular}
+    \right\}
+    $ %
+    \end{minipage}
+    \vspace{10pt}
+}
+
+\newenvironment{tonic-endrow}[2]
+{
+    \setlength{\parskip}{0pt}
+    \begin{minipage}{\textwidth}
+    {\vphantom{}\hspace{1em}#1}\\
+    $
+    \left\{
+        \begin{tabular}{#2}
+        }
+        {
+        \end{tabular}
+    \right\|
+    $
+    \end{minipage}
+    \vspace{10pt}
+}
+

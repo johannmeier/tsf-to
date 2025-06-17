@@ -12,34 +12,36 @@ public class TextLine extends SongLine {
     public String toLatex() {
         StringBuilder latexBuilder = new StringBuilder();
 
-
-        List<String> tokens = List.of(line.split(" "));
+        List<String> tokens = List.of(line.split(" +"));
 
         for (String token : tokens) {
 
-            if (token.matches("!!") || token.matches("||")) {
-                break;
-            }
-
-            if (!latexBuilder.isEmpty()) {
-                latexBuilder.append('&');
-            }
-
-            if (token.startsWith("!!") || token.endsWith("||")) {
-                latexBuilder.append("\\ds");
-            } else if (token.startsWith("!") || token.endsWith("|")) {
-                latexBuilder.append("\\ms");
-            }
 
             int cols = SymbolLine.getColCount(token);
             String aligned = SymbolLine.isRightAligned(token) ? "R" : "L";
             String processedToken = processToken(token);
             processedToken = processSymbols(processedToken);
-            if (cols == 1) {
-                latexBuilder.append("\\st{%s}".formatted(processedToken));
-            }
-            if (cols > 1) {
-                latexBuilder.append("\\multiline{%s}{%s}{\\st{%s}}".formatted(cols, aligned, processedToken));
+            if (processedToken.isEmpty()) {
+                latexBuilder.append("&".repeat(cols));
+            } else {
+                String songtext = "";
+
+                if (token.startsWith("!!") || token.endsWith("||")) {
+                    songtext = "\\ds";
+                } else if (token.startsWith("!") || token.endsWith("|")) {
+                    songtext = "\\ms";
+                } else {
+                    processedToken = "\\ " +  processedToken;
+                }
+
+                songtext += "\\st{%s}".formatted(processedToken);
+
+                if (cols == 1) {
+                    latexBuilder.append(songtext).append("&");
+                }
+                if (cols > 1) {
+                    latexBuilder.append("\\multicolumn{%s}{%s}{%s}".formatted(cols, aligned, songtext)).append("&");
+                }
             }
         }
 

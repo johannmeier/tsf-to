@@ -8,7 +8,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.jm.tsfto.model.song.KeyValueLine.getValue;
+
 public class SongModel {
+
+    private static final String beginDocument = """
+            \\documentclass[a4paper, 12pt]{article}
+            \\usepackage[left=1.3cm, right=1.3cm, top=1.3cm, bottom=1.3cm]{geometry}
+            \\usepackage{song}
+            \\begin{document}
+            """;
+    private static final String endDocument = "\\end{document}";
+
     private final List<Object> songLines;
 
     public SongModel(List<Object> songLines) {
@@ -44,7 +55,7 @@ public class SongModel {
             } else if (ColsLine.matches(line)) {
                 scoreLines.add(new ColsLine(line));
             } else if (SymbolLine.matches(line)) {
-                scoreLines.add(new SymbolLine(line));
+                scoreLines.add(new SymbolLine(getValue(line)));
             } else if (NoteLine.matches(line)) {
                 scoreLines.add(new NoteLine(line));
             } else if (TextLine.matches(line)) {
@@ -67,6 +78,7 @@ public class SongModel {
 
     public String toLatex() {
         StringBuilder latexBuilder = new StringBuilder();
+        latexBuilder.append(beginDocument).append("\n");
         for (Object object : getSongLines()) {
             if (object instanceof ScorePart) {
                 latexBuilder.append(((ScorePart) object).toLatex()).append('\n');
@@ -76,6 +88,7 @@ public class SongModel {
                 throw new RuntimeException("Unknown SongModel object: " + object);
             }
         }
+        latexBuilder.append(endDocument).append("\n");
         return latexBuilder.toString();
     }
 }

@@ -2,7 +2,6 @@ package de.jm.tsfto.parser;
 
 import de.jm.tsfto.exception.InvalidNoteRuntimeException;
 import de.jm.tsfto.model.tsf.TsfNote;
-import de.jm.tsfto.model.tsf.TsfToken;
 import org.junit.jupiter.api.Test;
 
 
@@ -124,36 +123,36 @@ class TsfTokenParserTest {
     void parse() {
         List<TsfNote> notes;
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of(":d,"), TsfToken.of(".,m''")));
+        notes = TsfTokenParser.parse(List.of(":d,", ".,m''"));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.NONE, -1, TsfNote.Type.NOTE, notes.getFirst());
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 2, TsfNote.Type.NOTE, notes.get(1));
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of("!d"), TsfToken.of(".m,")));
+        notes = TsfTokenParser.parse(List.of("!d", ".m,"));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, -1, TsfNote.Type.NOTE, notes.get(1));
 
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of("|s+"), TsfToken.of(",,m")));
+        notes = TsfTokenParser.parse(List.of("|s+", ",,m"));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.HALF_QUARTER, TsfNote.Accent.BAR, 0, TsfNote.Type.NOTE, notes.getFirst());
         assertEquals("+", notes.getFirst().getPostfix());
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.NOTE, notes.get(1));
         assertEquals(",,", notes.get(1).getPrefix());
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of(";-"), TsfToken.of(".")));
+        notes = TsfTokenParser.parse(List.of(";-", "."));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.ACCENTED, 0, TsfNote.Type.CONTINUE, notes.getFirst());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.BREAK, notes.get(1));
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of(":d"), TsfToken.of(".-"), TsfToken.of(",d'")));
+        notes = TsfTokenParser.parse(List.of(":d", ".-", ",d'"));
         assertEquals(3, notes.size());
         assertNote(TsfNote.Length.HALF, TsfNote.Accent.NONE, 0, TsfNote.Type.NOTE, notes.getFirst());
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 0, TsfNote.Type.CONTINUE, notes.get(1));
         assertNote(TsfNote.Length.QUARTER, TsfNote.Accent.UNKNOWN, 1, TsfNote.Type.NOTE, notes.get(2));
 
-        notes = TsfTokenParser.parse(List.of(TsfToken.of("||"), TsfToken.of("!!")));
+        notes = TsfTokenParser.parse(List.of("||", "!!"));
         assertEquals(2, notes.size());
         assertNote(TsfNote.Length.FULL, TsfNote.Accent.DOUBLE_BAR, 0, TsfNote.Type.BREAK, notes.getFirst());
         assertNote(TsfNote.Length.UNKNOWN, TsfNote.Accent.DOUBLE_BAR, 0, TsfNote.Type.END_OF_PART, notes.get(1));

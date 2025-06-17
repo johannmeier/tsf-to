@@ -1,0 +1,24 @@
+\ProvidesPackage{song}
+
+\geometry{a4paper,includeheadfoot,headheight=60pt,headsep=0.2cm}
+
+\usepackage{lastpage}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\IfFileExists{tonic-solfa.sty}
+{ \usepackage{tonic-solfa} }
+{ \usepackage{../latex/tonic-solfa} }
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+\newcommand\tskip{\vspace{5pt}}
+
+\newcommand\SongTitle{}
+\newcommand\SongComposer{}
+\newcommand\SongNumber{}
+\newcommand\SongPitch{}
+
+\chead{\textbf{\large \SongTitle}\\{\small\SongComposer}}
+\SongPitch

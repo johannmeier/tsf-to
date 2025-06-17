@@ -2,7 +2,6 @@ package de.jm.tsfto.parser;
 
 import de.jm.tsfto.exception.InvalidNoteRuntimeException;
 import de.jm.tsfto.model.tsf.TsfNote;
-import de.jm.tsfto.model.tsf.TsfToken;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,12 +9,12 @@ import java.util.Map;
 
 import static de.jm.tsfto.model.tsf.TsfNote.Accent;
 import static de.jm.tsfto.model.tsf.TsfNote.validNotes;
-import static de.jm.tsfto.parser.TsfLineParser.TOKEN_NOTES;
 
 public class TsfTokenParser {
 
-    static String validNoteFirstChars = "drmfsltb- ";
-    static String validNoteSecondChars = "ai";
+    public static final String TOKEN_NOTES = "drmfsltb-";
+    static final String validNoteFirstChars = TOKEN_NOTES + " ";
+    static final String validNoteSecondChars = "ai";
 
     static Map<String, TsfNote.Length> prefixToLength = Map.of(
             ".", TsfNote.Length.HALF,
@@ -47,22 +46,22 @@ public class TsfTokenParser {
             TsfNote.Length.UNKNOWN, TsfNote.Length.UNKNOWN
     );
 
-    private final List<TsfToken> tokens;
+    private final List<String> tokens;
     private final List<TsfNote> tsfNotes = new ArrayList<>();
     private int pos;
 
-    TsfTokenParser(List<TsfToken> tokens) {
+    TsfTokenParser(List<String> tokens) {
         this.tokens = tokens;
     }
 
-    public static List<TsfNote> parse(List<TsfToken> tokens) {
+    public static List<TsfNote> parse(List<String> tokens) {
         return new TsfTokenParser(tokens).parse();
     }
 
     private List<TsfNote> parse() {
         for (pos = 0; pos < tokens.size(); pos++) {
             TsfNote.Length length = getLength();
-            if (length == TsfNote.Length.UNKNOWN && !TsfLineParser.isEndToken(current().toString()) && next() == null) {
+            if (length == TsfNote.Length.UNKNOWN && !isEndToken(current()) && next() == null) {
                 length = TsfNote.Length.FULL;
             }
             tsfNotes.add(new TsfNote(getOctave(), getNote(), length, getAccent(), getPrefix(), getPostfix(), getKeyChangeOctave(), getKeyChangeNote()));
@@ -70,11 +69,11 @@ public class TsfTokenParser {
         return tsfNotes;
     }
 
-    public TsfToken current() {
+    public String current() {
         return tokens.get(pos);
     }
 
-    public TsfToken next() {
+    public String next() {
         if (pos + 1 < tokens.size()) {
             return tokens.get(pos + 1);
         } else {
@@ -83,7 +82,7 @@ public class TsfTokenParser {
     }
 
     int getOctave() {
-        return getOctave(current().toString());
+        return getOctave(current());
     }
 
     static int getOctave(String tsfToken) {
@@ -106,7 +105,7 @@ public class TsfTokenParser {
     }
 
     String getNote() {
-        return getNote(current().toString());
+        return getNote(current());
     }
 
     static String getNote(String tsfToken) {
@@ -126,13 +125,13 @@ public class TsfTokenParser {
     }
 
     TsfNote.Length getLength() {
-        TsfNote.Length length = remainingLengths.get(getTsfSignLength(current().toString()));
-        TsfToken next = next();
+        TsfNote.Length length = remainingLengths.get(getTsfSignLength(current()));
+        String next = next();
 
         if (next != null) {
-            String prefix = getPrefix(next.toString());
+            String prefix = getPrefix(next);
             if (prefixToLength.containsKey(prefix)) {
-                length = getTsfSignLength(next.toString());
+                length = getTsfSignLength(next);
             }
 
             if (length == TsfNote.Length.UNKNOWN) {
@@ -152,7 +151,7 @@ public class TsfTokenParser {
     }
 
     TsfNote.Accent getAccent() {
-        return getAccent(current().toString());
+        return getAccent(current());
     }
 
     static TsfNote.Accent getAccent(String tsfToken) {
@@ -169,7 +168,7 @@ public class TsfTokenParser {
     }
 
     String getPrefix() {
-        return getPrefix(current().toString());
+        return getPrefix(current());
     }
 
     static String getPrefix(String token) {
@@ -189,7 +188,7 @@ public class TsfTokenParser {
     }
 
     String getPostfix() {
-        return getPostfix(current().toString());
+        return getPostfix(current());
     }
 
     static String getPostfix(String tsfToken) {
@@ -207,7 +206,7 @@ public class TsfTokenParser {
     }
 
     int getKeyChangeOctave() {
-        return getKeyChangeOctave(current().toString());
+        return getKeyChangeOctave(current());
     }
 
     static int getKeyChangeOctave(String tsfToken) {
@@ -221,7 +220,7 @@ public class TsfTokenParser {
     }
 
     String getKeyChangeNote() {
-        return getKeyChangeNote(current().toString());
+        return getKeyChangeNote(current());
     }
 
     static String getKeyChangeNote(String tsfToken) {
@@ -262,5 +261,9 @@ public class TsfTokenParser {
         } else {
             throw new InvalidNoteRuntimeException(note.toString());
         }
+    }
+
+    public static boolean isEndToken(String token) {
+        return "!!".equals(token) || "||".equals(token);
     }
 }
