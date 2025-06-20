@@ -9,7 +9,7 @@ public class TsfNote {
             "da", "d", "di", "ra", "r", "ri", "ma", "m", "mi", "fa", "f", "fi", "sa", "s", "si", "la", "l", "li", "ta", "t", "ti", "ba", "-"
     );
 
-    public enum Length {FULL, HALF_QUARTER, TWO_THIRDS, HALF, QUARTER, THIRD, EIGHTS, UNKNOWN}
+    public enum Length {FULL, HALF_QUARTER, TWO_THIRDS, HALF, QUARTER, SIXTH, THIRD, EIGHTS, UNKNOWN}
 
     public enum Accent {BAR, DOUBLE_BAR, ACCENTED, NONE, UNKNOWN}
 
@@ -110,6 +110,16 @@ public class TsfNote {
 
     public boolean isDoubleCol() {
         return postfix.contains("*");
+    }
+
+    public int getColCount() {
+        int count = 1;
+        for (char c : postfix.toCharArray()) {
+            if (c == '*') {
+                count++;
+            }
+        }
+        return count;
     }
 
     public boolean isTwoNotesOneColumn() {

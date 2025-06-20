@@ -40,6 +40,10 @@ public class SymbolLine extends SongLine {
         symbolToLatex.put(">", "\\hfill");
         symbolToLatex.put("_", " ");
         symbolToLatex.put("*", "&");
+        symbolToLatex.put("!", "\\ms");
+        symbolToLatex.put("|", "\\ms");
+        symbolToLatex.put("!!", "\\ds");
+        symbolToLatex.put("||", "\\ds");
     }
 
     private static Map<String, String> keyValueToLatex = new HashMap<>();
@@ -76,9 +80,9 @@ public class SymbolLine extends SongLine {
                     latexBuilder.append("&");
                 }
                 if (cols == 1) {
-                    latexBuilder.append(processedToken);
+                    latexBuilder.append(processedToken).append("&");
                 } else {
-                    latexBuilder.append("\\multicolumn{%s}{%s}{%s}".formatted(cols, aligned, processedToken));
+                    latexBuilder.append("\\multicolumn{%s}{%s}{%s}".formatted(cols, aligned, processedToken)).append("&");
                 }
             }
         }

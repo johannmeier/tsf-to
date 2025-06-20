@@ -10,8 +10,8 @@ public class ScorePart {
     private final static String beginTabular = "\\begin{tabular}{%s}\n";
     private final static String endTabular = "\\end{tabular}\n";
     private final static String leftBrace= "\\ldelim\\{{%s}{*}&";
-    private final static String rightBrace= "&\\rdelim\\{{%s}{*}";
-    private final static String rightBars= "&\\rdelim\\|{%s}{*}";
+    private final static String rightBrace= "\\rdelim\\{{%s}{*}";
+    private final static String rightBars= "\\rdelim\\|{%s}{*}";
 
 
 

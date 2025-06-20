@@ -4,8 +4,14 @@ import java.util.List;
 
 public class TextLine extends SongLine {
 
+    private static final String SONG_TEXT = "\\st{%s}";
+
     public TextLine(String line) {
         super(line);
+    }
+
+    public static TextLine of(String line) {
+        return new TextLine(line);
     }
 
     @Override
@@ -19,27 +25,31 @@ public class TextLine extends SongLine {
 
             int cols = SymbolLine.getColCount(token);
             String aligned = SymbolLine.isRightAligned(token) ? "R" : "L";
+
+            String prefix = "";
+            if (token.startsWith("!!") || token.startsWith("||")) {
+                prefix = "\\ds";
+            } else if (token.startsWith("!") || token.startsWith("|")) {
+                prefix = "\\ms";
+            }
+
             String processedToken = processToken(token);
             processedToken = processSymbols(processedToken);
+
             if (processedToken.isEmpty()) {
-                latexBuilder.append("&".repeat(cols));
+                latexBuilder.append(prefix).append("&".repeat(cols));
             } else {
-                String songtext = "";
 
-                if (token.startsWith("!!") || token.endsWith("||")) {
-                    songtext = "\\ds";
-                } else if (token.startsWith("!") || token.endsWith("|")) {
-                    songtext = "\\ms";
-                } else {
-                    processedToken = "\\ " +  processedToken;
-                }
-
-                songtext += "\\st{%s}".formatted(processedToken);
 
                 if (cols == 1) {
+                    if (prefix.isEmpty()) {
+                        processedToken = "\\ " + processedToken;
+                    }
+                    String songtext = prefix + SONG_TEXT.formatted(processedToken);
                     latexBuilder.append(songtext).append("&");
                 }
                 if (cols > 1) {
+                    String songtext = prefix + SONG_TEXT.formatted(processedToken);
                     latexBuilder.append("\\multicolumn{%s}{%s}{%s}".formatted(cols, aligned, songtext)).append("&");
                 }
             }

@@ -7,25 +7,21 @@ import java.util.Map;
 
 public class Latex {
 
-    private static final Map<TsfNote.Accent, String> accentToLatex = new HashMap<>();
+    private static final Map<String, String> prefixToLatex = new HashMap<>();
 
     static {
-        accentToLatex.put(TsfNote.Accent.BAR, "m");
-        accentToLatex.put(TsfNote.Accent.DOUBLE_BAR, "d");
-        accentToLatex.put(TsfNote.Accent.ACCENTED, "a");
-        accentToLatex.put(TsfNote.Accent.NONE, "n");
-        accentToLatex.put(TsfNote.Accent.UNKNOWN, "");
-    }
-
-    private static final Map<TsfNote.Length, String> lengthToLatex = new HashMap<>();
-
-    static {
-        lengthToLatex.put(TsfNote.Length.HALF_QUARTER, "hq");
-        lengthToLatex.put(TsfNote.Length.TWO_THIRDS, "tt");
-        lengthToLatex.put(TsfNote.Length.HALF, "h");
-        lengthToLatex.put(TsfNote.Length.QUARTER, "q");
-        lengthToLatex.put(TsfNote.Length.THIRD, "t");
-        lengthToLatex.put(TsfNote.Length.EIGHTS, "e");
+        prefixToLatex.put("!", "m");
+        prefixToLatex.put("|", "m");
+        prefixToLatex.put("!!", "d");
+        prefixToLatex.put("||", "d");
+        prefixToLatex.put(";", "a");
+        prefixToLatex.put(":", "n");
+        prefixToLatex.put(".,", "hq");
+        prefixToLatex.put("//", "tt");
+        prefixToLatex.put(".", "h");
+        prefixToLatex.put(",", "q");
+        prefixToLatex.put("/", "t");
+        prefixToLatex.put("", "e");
     }
 
     public static String tsfNoteToLatex(TsfNote note) {
@@ -34,16 +30,13 @@ public class Latex {
         }
 
         StringBuilder latexBuilder = new StringBuilder("\\");
+        int colCount = note.getColCount();
 
-        if (note.isDoubleCol()) {
+        if (colCount == 2) {
             latexBuilder.append("d");
         }
 
-        TsfNote.Accent accent = note.getAccent();
-        latexBuilder.append(accentToLatex.get(accent));
-        if (accent == TsfNote.Accent.UNKNOWN) {
-            latexBuilder.append(lengthToLatex.get(note.getLength()));
-        }
+        latexBuilder.append(prefixToLatex.get(note.getPrefix()));
 
         if (note.isContinue()) {
             latexBuilder.append("c");
@@ -57,7 +50,11 @@ public class Latex {
             latexBuilder.append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline()));
         }
 
-        return latexBuilder.toString();
+        if (colCount > 2) {
+            return "\\multicolumn{" + colCount + "}{L}{" + latexBuilder + "}";
+        } else {
+            return latexBuilder.toString();
+        }
     }
 
     static String getLatexNoteString(int octave, String note, String underLength, boolean underline) {

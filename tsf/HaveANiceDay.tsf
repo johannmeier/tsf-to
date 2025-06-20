@@ -4,14 +4,22 @@ C: Lorenz Maierhofer(*1956)
 K: D-Dur
 sql: 1.12cm
 
-latex: \footnotesize
+latex: \scriptsize
 
-cols: HHHHFF FHHFF FFFF FHHFF
-s: p:A
-!d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :t  :- ;l  !s  :f     ;m   :r   !!
-!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh _oh*    oh   oh! !!
-!d   .r :m   .s   ;- :- !f  :- .f   ;- :- ! :s  :- ;f  !m  :r     ;d   :t,  !!
-!d   .r :m   .s   ;- :- !t  :- .t   ;- :- ! :r' :- ;d' !d' :-     ;l   :-   !!
-!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh  *  *   oh!  *   !!
-!d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :s, :- ;s, !s, :- .s, ;l,  :t,  !!
-!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh    *be  dum  dum !!
+cols: HHHHFF FHHFF FFFF FHQQFF
+s: Hello*
+s: b:10  *  *    *    *  *  *   *  *    *  *  * *   *  *   *   * *  *  *    >ds
+!d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :t  :- ;l  !s  :f**   ;m   :r   !!
+!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh _oh*  *  oh   oh! !!
+!d   .r :m   .s   ;- :- !f  :- .f   ;- :- ! :s  :- ;f  !m  :r**   ;d   :t,  !!
+s: !  *  *    *    *  * !    *  *    *  * !  *   *  *  !    *   **  *  ^
+!d   .r :m   .s   ;- :- !t  :- .t   ;- :- ! :r' :- ;d' !d' :-**   ;l   :-   !!
+!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh  *  * *  oh!  *   !!
+!d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :s, :- ;s, !s, :- .s, ,- ;l,  :t,  !!
+!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh  * _be* dum  dum !!
+
+sql: 3cm
+cols: SSSSSS F
+s: ****** *
+!d* /d* /d* |r
+!d** .d**   |r

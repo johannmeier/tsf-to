@@ -15,4 +15,9 @@ class NoteLineTest {
         assertFalse(NoteLine.matches("C: !the sun shines always"));
     }
 
+    @Test
+    void toLatex() {
+        assertEquals("\\multicolumn{3}{L}{\\nn{d}}&", NoteLine.of(":d**").toLatex());
+    }
+
 }
