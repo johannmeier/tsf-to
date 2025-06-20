@@ -36,10 +36,10 @@ public class NoteLineToLatexTest {
         assertEquals("\\nn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.NONE, ":", "", 0, null)));
 
         assertEquals("\\hn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, ".", "", 0, null)));
-        assertEquals("\\hqn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, ".", "", 0, null)));
-        assertEquals("\\tn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.THIRD, TsfNote.Accent.UNKNOWN, ".", "", 0, null)));
+        assertEquals("\\hqn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF_QUARTER, TsfNote.Accent.UNKNOWN, ".,", "", 0, null)));
+        assertEquals("\\tn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.THIRD, TsfNote.Accent.UNKNOWN, "/", "", 0, null)));
         assertEquals("\\ttn{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.TWO_THIRDS, TsfNote.Accent.UNKNOWN, "//", "", 0, null)));
-        assertEquals("\\en{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.EIGHTS, TsfNote.Accent.UNKNOWN, ".", "", 0, null)));
+        assertEquals("\\en{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.EIGHTS, TsfNote.Accent.UNKNOWN, "", "", 0, null)));
 
 
         assertEquals("\\nc", tsfNoteToLatex(new TsfNote(0, "-", TsfNote.Length.FULL, TsfNote.Accent.NONE, ":", "", 0, null)));
@@ -53,14 +53,14 @@ public class NoteLineToLatexTest {
         assertEquals("\\mkc{\\nn{d}}{\\nn{r}}", tsfNoteToLatex(new TsfNote(0, "r", TsfNote.Length.FULL, TsfNote.Accent.BAR, "|", "", 0, "d")));
 
         // underline/underpoint d_5
-        assertEquals("\\hnu[1]{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, ":", "_", 0, null)));
-        assertEquals("\\hnu[2]{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, ":", "_2", 0, null)));
-        assertEquals("\\mhp[1]{d}", tsfNoteToLatex(new TsfNote(1, "d", TsfNote.Length.HALF, TsfNote.Accent.BAR, ":", "=", 0, null)));
-        assertEquals("\\ahp[2.5]{d}", tsfNoteToLatex(new TsfNote(1, "d", TsfNote.Length.HALF, TsfNote.Accent.ACCENTED, ":", "=2.5", 0, null)));
+        assertEquals("\\hnu[1]{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, ".", "_", 0, null)));
+        assertEquals("\\hnu[2]{d}", tsfNoteToLatex(new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, ".", "_2", 0, null)));
+        assertEquals("\\mhp[1]{d}", tsfNoteToLatex(new TsfNote(1, "d", TsfNote.Length.HALF, TsfNote.Accent.BAR, "!", "=", 0, null)));
+        assertEquals("\\ahp[2.5]{d}", tsfNoteToLatex(new TsfNote(1, "d", TsfNote.Length.HALF, TsfNote.Accent.ACCENTED, ";", "=2.5", 0, null)));
 
         // one note in two columns (d*)
-        assertEquals("\\dnh{d}", tsfNoteToLatex(new TsfNote(1, "d", TsfNote.Length.HALF, TsfNote.Accent.NONE, ".", "*", 0, null)));
-        assertEquals("\\dnc", tsfNoteToLatex(new TsfNote(0, "-", TsfNote.Length.HALF, TsfNote.Accent.NONE, ".", "*", 0, null)));
+        assertEquals("\\dhh{d}", tsfNoteToLatex(new TsfNote(1, "d", TsfNote.Length.HALF, TsfNote.Accent.NONE, ".", "*", 0, null)));
+        assertEquals("\\dhc", tsfNoteToLatex(new TsfNote(0, "-", TsfNote.Length.HALF, TsfNote.Accent.NONE, ".", "*", 0, null)));
 
         // two notes in one column (d+ r)
         assertEquals("\\mn{d}\\hfill\\hh{r}", Latex.twoNotesOneColumnToLatex(

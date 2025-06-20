@@ -18,14 +18,14 @@ class TextLineTest {
 
     @Test
     void toLatex() {
-        assertEquals("\\ms&\\st{have}&", TextLine.of("! have").toLatex());
+        assertEquals("\\ms&\\st{\\ have}&", TextLine.of("! have").toLatex());
 
-        assertEquals("\\st{hello}&&&&", new TextLine("hello ***").toLatex());
+        assertEquals("\\st{\\ hello}&&&&", new TextLine("hello ***").toLatex());
         assertEquals("\\multicolumn{3}{L}{\\st{hello\\hfill wolfgang}}&", new TextLine("hello>wolfgang**").toLatex());
         assertEquals("", new TextLine("").toLatex());
-        assertEquals("\\st{hello}&", new TextLine("hello").toLatex());
-        assertEquals("\\st{hello wolfgang}&", new TextLine("hello_wolfgang").toLatex());
-        assertEquals("\\st{hello}&\\st{wolfgang}&", new TextLine("hello wolfgang").toLatex());
+        assertEquals("\\st{\\ hello}&", new TextLine("hello").toLatex());
+        assertEquals("\\st{\\ hello wolfgang}&", new TextLine("hello_wolfgang").toLatex());
+        assertEquals("\\st{\\ hello}&\\st{\\ wolfgang}&", new TextLine("hello wolfgang").toLatex());
         assertEquals("\\multicolumn{2}{L}{\\st{hello}}&", new TextLine("hello*").toLatex());
         assertEquals("\\multicolumn{3}{R}{\\st{hello}}&", new TextLine("*hello*").toLatex());
         assertEquals("\\multicolumn{3}{L}{\\st{hello wolfgang}}&", new TextLine("hello*wolfgang").toLatex());

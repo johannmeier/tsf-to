@@ -17,7 +17,7 @@ class NoteLineTest {
 
     @Test
     void toLatex() {
-        assertEquals("\\multicolumn{3}{L}{\\nn{d}}&", NoteLine.of(":d**").toLatex());
+        assertEquals("\\multicolumn{3}{L}{\\nn{d}}", NoteLine.of(":d**").toLatex());
     }
 
 }
