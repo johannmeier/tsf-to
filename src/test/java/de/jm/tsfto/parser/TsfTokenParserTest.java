@@ -166,4 +166,13 @@ class TsfTokenParserTest {
         assertEquals(type, note.getType());
     }
 
+    @Test
+    void min() {
+        assertEquals(TsfNote.Length.FULL, TsfTokenParser.min(TsfNote.Length.FULL, TsfNote.Length.FULL));
+        assertEquals(TsfNote.Length.HALF, TsfTokenParser.min(TsfNote.Length.HALF, TsfNote.Length.FULL));
+        assertEquals(TsfNote.Length.QUARTER, TsfTokenParser.min(TsfNote.Length.HALF, TsfNote.Length.QUARTER));
+        assertEquals(TsfNote.Length.THIRD, TsfTokenParser.min(TsfNote.Length.HALF, TsfNote.Length.THIRD));
+        assertEquals(TsfNote.Length.EIGHTS, TsfTokenParser.min(TsfNote.Length.HALF, TsfNote.Length.EIGHTS));
+    }
+
 }

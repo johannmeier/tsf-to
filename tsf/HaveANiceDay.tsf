@@ -5,8 +5,6 @@ K: D-Dur
 sql: 1.12cm
 
 latex: \scriptsize
-
-cols: HHHHFF FHHFF FFFF FHQQFF
 s: Hello*
 s: b:10  *  *    *    *  *  *   *  *    *  *  * *   *  *   *   * *  *  *    >ds
 !d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :t  :- ;l  !s  :f**   ;m   :r   !!

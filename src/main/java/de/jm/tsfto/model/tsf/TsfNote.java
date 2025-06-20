@@ -9,7 +9,7 @@ public class TsfNote {
             "da", "d", "di", "ra", "r", "ri", "ma", "m", "mi", "fa", "f", "fi", "sa", "s", "si", "la", "l", "li", "ta", "t", "ti", "ba", "-"
     );
 
-    public enum Length {FULL, HALF_QUARTER, TWO_THIRDS, HALF, QUARTER, SIXTH, THIRD, EIGHTS, UNKNOWN}
+    public enum Length {EIGHTS, SIXTH, QUARTER, THIRD, HALF, TWO_THIRDS, HALF_QUARTER, FULL, UNKNOWN}
 
     public enum Accent {BAR, DOUBLE_BAR, ACCENTED, NONE, UNKNOWN}
 

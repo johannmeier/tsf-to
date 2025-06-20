@@ -131,7 +131,7 @@ public class TsfTokenParser {
         if (next != null) {
             String prefix = getPrefix(next);
             if (prefixToLength.containsKey(prefix)) {
-                length = getTsfSignLength(next);
+                length = min(length, getTsfSignLength(next));
             }
 
             if (length == TsfNote.Length.UNKNOWN) {
@@ -140,6 +140,14 @@ public class TsfTokenParser {
         }
 
         return length;
+    }
+
+    static TsfNote.Length min(TsfNote.Length length1, TsfNote.Length length2) {
+        if (length1.compareTo(length2) < 0) {
+            return length1;
+        } else {
+            return length2;
+        }
     }
 
     static TsfNote.Length getTsfSignLength(String token) {

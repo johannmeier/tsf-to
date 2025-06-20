@@ -2,8 +2,12 @@ package de.jm.tsfto.model.song;
 
 import de.jm.tsfto.latex.Latex;
 import de.jm.tsfto.model.tsf.TsfNote;
+import de.jm.tsfto.parser.MergeCols;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ScorePart {
 
@@ -13,6 +17,7 @@ public class ScorePart {
     private final static String rightBrace= "\\rdelim\\{{%s}{*}";
     private final static String rightBars= "\\rdelim\\|{%s}{*}";
 
+    private final static String latexRowEndNewline = "\\\\\n";
 
 
     private final List<SongLine> songLines;
@@ -43,38 +48,38 @@ public class ScorePart {
     public String toLatex() {
         StringBuilder latexBuilder = new StringBuilder();
 
-        ColsLine colsLine = getColsLine();
-        String cols;
-
-        if (colsLine == null) {
-            cols = getCols();
-        } else {
-            cols = "B " + colsLine.toLatex() + " B";
-        }
-
         int countSymbolAndColsLinesAtBeginning = getCountSymbolAndColsLinesAtBeginning();
         int countBracedLines = songLines.size() - countSymbolAndColsLinesAtBeginning;
 
         boolean isEndRow = isEndRowAndRemoveEndSigns();
         boolean firstBracketLine = true;
 
+        ColsLine colsLine = getColsLine();
+        String cols;
+
+        if (colsLine == null) {
+            cols = "B " + getCols() + " B";
+        } else {
+            cols = "B " + colsLine.toLatex() + " B";
+        }
+
         for (SongLine songLine : songLines) {
             if (songLine instanceof SymbolLine symbolLine) {
-                latexBuilder.append("&").append(symbolLine.toLatex()).append("\\\\\n");
+                latexBuilder.append("&").append(symbolLine.toLatex()).append(latexRowEndNewline);
             }
             if (songLine instanceof NoteLine noteLine) {
                 if (firstBracketLine) {
                     latexBuilder.append(leftBrace.formatted(countBracedLines))
                             .append(noteLineToLatex(noteLine, cols))
                             .append(isEndRow ? rightBars.formatted(countBracedLines) : rightBrace.formatted(countBracedLines))
-                            .append("\\\\\n");
+                            .append(latexRowEndNewline);
                     firstBracketLine = false;
                 } else {
-                    latexBuilder.append("&").append(noteLineToLatex(noteLine, cols)).append("\\\\\n");
+                    latexBuilder.append("&").append(noteLineToLatex(noteLine, cols)).append(latexRowEndNewline);
                 }
             }
             if (songLine instanceof TextLine textLine) {
-                latexBuilder.append("&").append(textLine.toLatex()).append("\\\\\n");
+                latexBuilder.append("&").append(textLine.toLatex()).append(latexRowEndNewline);
             }
         }
 
@@ -123,7 +128,34 @@ public class ScorePart {
     }
 
     private String getCols() {
-        return "TODO";
+        List<String> cols = new ArrayList<>();
+        for (SongLine songLine : songLines) {
+            if (songLine instanceof NoteLine noteLine) {
+                cols.add(getCols(noteLine));
+            }
+        }
+        return MergeCols.merge(cols);
+    }
+
+    private static Map<TsfNote.Length, String> lengthToCol = new HashMap<>();
+    static {
+        lengthToCol.put(TsfNote.Length.FULL, "F");
+        lengthToCol.put(TsfNote.Length.HALF_QUARTER, "HQ");
+        lengthToCol.put(TsfNote.Length.TWO_THIRDS, "TT");
+        lengthToCol.put(TsfNote.Length.HALF, "H");
+        lengthToCol.put(TsfNote.Length.THIRD, "T");
+        lengthToCol.put(TsfNote.Length.QUARTER, "Q");
+        lengthToCol.put(TsfNote.Length.EIGHTS, "E");
+    }
+
+    static String getCols(NoteLine noteLine) {
+        StringBuilder cols = new StringBuilder();
+
+        for (TsfNote note : noteLine.getTsfNotes()) {
+            cols.append(lengthToCol.get(note.getLength()));
+        }
+
+        return cols.toString();
     }
 
     private ColsLine getColsLine() {

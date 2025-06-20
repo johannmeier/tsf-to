@@ -29,7 +29,7 @@ public class MergeCols {
 
 
 
-    static String merge(List<String> columns) {
+    public static String merge(List<String> columns) {
 
         List<String> cols = new ArrayList<>(columns);
 
