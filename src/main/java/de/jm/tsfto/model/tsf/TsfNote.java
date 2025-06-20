@@ -162,4 +162,9 @@ public class TsfNote {
 
         return lengthBuilder.toString();
     }
+
+    @Override
+    public String toString() {
+        return prefix + note + postfix;
+    }
 }

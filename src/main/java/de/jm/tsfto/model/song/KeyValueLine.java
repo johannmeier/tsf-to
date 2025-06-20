@@ -23,6 +23,7 @@ public class KeyValueLine extends SongLine {
         keyToLatex.put("top", "top=%s");
         keyToLatex.put("bottom", "bottom=%s");
         keyToLatex.put("bpm", "bpm=%s");
+        keyToLatex.put("pulse", "bpm=%s");
         keyToLatex.put("fontsize", "\\%s");
         keyToLatex.put("newpage", "\\newpage");
         keyToLatex.put("landscape", "TODO");

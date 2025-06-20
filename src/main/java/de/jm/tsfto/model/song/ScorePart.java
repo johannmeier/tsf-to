@@ -14,11 +14,45 @@ public class ScorePart {
     private final static String beginTabular = "\\begin{tabular}{%s}\n";
     private final static String endTabular = "\\end{tabular}\n";
     private final static String leftBrace= "\\ldelim\\{{%s}{*}&";
-    private final static String rightBrace= "\\rdelim\\{{%s}{*}";
+    private final static String rightBrace= "\\rdelim\\}{%s}{*}";
     private final static String rightBars= "\\rdelim\\|{%s}{*}";
 
     private final static String latexRowEndNewline = "\\\\\n";
 
+    private static final Map<TsfNote.Length, String> lengthToCol = new HashMap<>();
+    static {
+        lengthToCol.put(TsfNote.Length.FULL, "F");
+        lengthToCol.put(TsfNote.Length.HALF_QUARTER, "HQ");
+        lengthToCol.put(TsfNote.Length.TWO_THIRDS, "TT");
+        lengthToCol.put(TsfNote.Length.HALF, "H");
+        lengthToCol.put(TsfNote.Length.THIRD, "T");
+        lengthToCol.put(TsfNote.Length.QUARTER, "Q");
+        lengthToCol.put(TsfNote.Length.EIGHTS, "E");
+    }
+
+    private static final Map<Character, Integer> colToInt = new HashMap<>();
+
+    static {
+        colToInt.put('F', 24);
+        colToInt.put('H', 12);
+        colToInt.put('T', 8);
+        colToInt.put('Q', 6);
+        colToInt.put('S', 4);
+        colToInt.put('E', 3);
+    }
+
+    private static final Map<TsfNote.Length, Integer> lengthToInt = new HashMap<>();
+
+    static {
+        lengthToInt.put(TsfNote.Length.FULL, 24);
+        lengthToInt.put(TsfNote.Length.HALF_QUARTER, 18);
+        lengthToInt.put(TsfNote.Length.TWO_THIRDS, 16);
+        lengthToInt.put(TsfNote.Length.HALF, 12);
+        lengthToInt.put(TsfNote.Length.THIRD, 8);
+        lengthToInt.put(TsfNote.Length.QUARTER, 6);
+        lengthToInt.put(TsfNote.Length.SIXTH, 4);
+        lengthToInt.put(TsfNote.Length.EIGHTS, 3);
+    }
 
     private final List<SongLine> songLines;
 
@@ -110,18 +144,37 @@ public class ScorePart {
     }
 
     private String noteLineToLatex(NoteLine noteLine, String cols) {
+        cols = cols.replace(" ", "").replace("B", "");
         StringBuilder latexBuilder = new StringBuilder();
         List<TsfNote> notes = noteLine.getTsfNotes();
 
+        int colTime = 0;
+        int noteTime = 0;
+        int notePos = 0;
+
         if (notes.size() > cols.length()) {
+            System.out.println(cols);
+            System.out.println(notes);
             throw new RuntimeException("cols size " + cols.length() + " must be larger than notes size " + notes.size());
         }
 
-        for (TsfNote note : notes) {
-            latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
-            if (note.getLength() == TsfNote.Length.HALF_QUARTER || note.getLength() == TsfNote.Length.TWO_THIRDS) {
-                latexBuilder.append(" & ");
+        TsfNote note;
+        int noteColCount = 1;
+        for (char c : cols.toCharArray()) {
+            if (colTime < noteTime) {
+                if (noteColCount == 1) {
+                    latexBuilder.append("&");
+                } else {
+                    noteColCount--;
+                }
+            } else {
+                note = notes.get(notePos++);
+                noteColCount = note.getColCount();
+                latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
+                noteTime += lengthToInt.get(note.getLength());
             }
+
+            colTime += colToInt.get(c);
         }
 
         return latexBuilder.toString();
@@ -137,16 +190,6 @@ public class ScorePart {
         return MergeCols.merge(cols);
     }
 
-    private static Map<TsfNote.Length, String> lengthToCol = new HashMap<>();
-    static {
-        lengthToCol.put(TsfNote.Length.FULL, "F");
-        lengthToCol.put(TsfNote.Length.HALF_QUARTER, "HQ");
-        lengthToCol.put(TsfNote.Length.TWO_THIRDS, "TT");
-        lengthToCol.put(TsfNote.Length.HALF, "H");
-        lengthToCol.put(TsfNote.Length.THIRD, "T");
-        lengthToCol.put(TsfNote.Length.QUARTER, "Q");
-        lengthToCol.put(TsfNote.Length.EIGHTS, "E");
-    }
 
     static String getCols(NoteLine noteLine) {
         StringBuilder cols = new StringBuilder();

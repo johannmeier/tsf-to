@@ -11,7 +11,7 @@ import static de.jm.tsfto.model.song.KeyValueLine.*;
 
 public class SymbolLine extends SongLine {
 
-    private static Map<String, String> symbolToLatex = new HashMap<>();
+    private static final Map<String, String> symbolToLatex = new HashMap<>();
 
     static {
         symbolToLatex.put("cresc", "\\cresc");
@@ -46,7 +46,7 @@ public class SymbolLine extends SongLine {
         symbolToLatex.put("||", "\\ds");
     }
 
-    private static Map<String, String> keyValueToLatex = new HashMap<>();
+    private static final Map<String, String> keyValueToLatex = new HashMap<>();
 
     static {
         keyValueToLatex.put("b:", "\\mnbr{%s}");

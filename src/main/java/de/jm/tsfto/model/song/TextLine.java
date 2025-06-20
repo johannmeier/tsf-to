@@ -7,7 +7,7 @@ public class TextLine extends SongLine {
     private static final String SONG_TEXT = "\\st{%s}";
 
     public TextLine(String line) {
-        super(line);
+        super(KeyValueLine.isKeyValue(line) ? KeyValueLine.getValue(line) : line);
     }
 
     public static TextLine of(String line) {
