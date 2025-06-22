@@ -4,7 +4,7 @@ public abstract class SongLine {
     protected String line;
 
     public SongLine(String line) {
-        this.line = line;
+        this.line = line.trim();
     }
 
     public String getLine() {

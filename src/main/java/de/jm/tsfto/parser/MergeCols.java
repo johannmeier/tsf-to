@@ -1,9 +1,6 @@
 package de.jm.tsfto.parser;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MergeCols {
     private static final Map<String, String> colToCols = new HashMap<>();
@@ -33,12 +30,10 @@ public class MergeCols {
 
         List<String> cols = new ArrayList<>(columns);
 
-        String firstCols = cols.getFirst();
-
         boolean changed;
         do {
             changed = false;
-            for (int i = 0; i < firstCols.length(); i++) {
+            for (int i = 0; i < maxLength(cols); i++) {
                 String shortestCol = getShortestCol(cols, i);
                 if (replaceCol(cols, i, shortestCol)) {
                     changed = true;
@@ -48,6 +43,17 @@ public class MergeCols {
         } while (changed);
 
         return cols.getFirst();
+    }
+
+    static int maxLength(List<String> cols) {
+        int max = 0;
+        for (String col : cols) {
+            int length = col.length();
+            if (length > max) {
+                max = length;
+            }
+        }
+        return max;
     }
 
     static boolean replaceCol(List<String> cols, int pos, String shortestCol) {

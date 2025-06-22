@@ -44,14 +44,14 @@ public class NoteLine extends SongLine {
             }
         }
 
-        int colonCount = getCount(':', line);
-        int bangCount = getCount('!', line);
-        bangCount += getCount('|', line);
-        int semicolonCount = getCount(';', line);
-        return colonCount + semicolonCount + bangCount > 1;
+        int colonCount = getCountTokenStartingWith(':', line);
+        int bangCount = getCountTokenStartingWith('!', line);
+        bangCount += getCountTokenStartingWith('|', line);
+        int semicolonCount = getCountTokenStartingWith(';', line);
+        return getCountTokenStartingWith('*', line) == 0 & (colonCount + semicolonCount + bangCount > 1);
     }
 
-    public static int getCount(char ch, String line) {
+    public static int getCountTokenStartingWith(char ch, String line) {
         if (line == null) {
             return 0;
         }

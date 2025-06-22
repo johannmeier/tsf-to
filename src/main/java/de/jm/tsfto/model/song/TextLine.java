@@ -21,8 +21,6 @@ public class TextLine extends SongLine {
         List<String> tokens = List.of(line.split(" +"));
 
         for (String token : tokens) {
-
-
             int cols = SymbolLine.getColCount(token);
             String aligned = SymbolLine.isRightAligned(token) ? "R" : "L";
 
@@ -39,8 +37,6 @@ public class TextLine extends SongLine {
             if (processedToken.isEmpty()) {
                 latexBuilder.append(prefix).append("&".repeat(cols));
             } else {
-
-
                 if (cols == 1) {
                     if (prefix.isEmpty()) {
                         processedToken = "\\ " + processedToken;

@@ -37,6 +37,7 @@ public class SongModel {
     public static SongModel parse(List<String> lines) {
         List<Object> songLines = new ArrayList<>();
         List<SongLine> scoreLines = new ArrayList<>();
+        List<VerseLine> verseLines = new ArrayList<>();
         for (String line : lines) {
             if (line == null) {
                 continue;
@@ -47,10 +48,16 @@ public class SongModel {
                     songLines.add(ScorePart.of(scoreLines));
                     scoreLines = new ArrayList<>();
                 }
+                if (!verseLines.isEmpty()) {
+                    songLines.add(VersePart.of(verseLines));
+                    verseLines = new ArrayList<>();
+                }
                 continue;
             }
 
-            if (KeyValueLine.matches(line)) {
+            if (VerseLine.matches(line) || !verseLines.isEmpty()) {
+                verseLines.add(VerseLine.of(line));
+            } else if (KeyValueLine.matches(line)) {
                 songLines.add(new KeyValueLine(line));
             } else if (ColsLine.matches(line)) {
                 scoreLines.add(new ColsLine(line));
@@ -80,7 +87,9 @@ public class SongModel {
         StringBuilder latexBuilder = new StringBuilder();
         latexBuilder.append(beginDocument).append("\n");
         for (Object object : getSongLines()) {
-            if (object instanceof ScorePart) {
+            if (object instanceof VersePart versePart) {
+                latexBuilder.append(versePart.toLatex()).append('\n');
+            } else if (object instanceof ScorePart) {
                 latexBuilder.append(((ScorePart) object).toLatex()).append('\n');
             }  else if (object instanceof SongLine) {
                 latexBuilder.append(((SongLine) object).toLatex()).append('\n');

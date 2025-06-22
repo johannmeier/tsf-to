@@ -13,13 +13,14 @@ public class ScorePart {
 
     private final static String beginTabular = "\\begin{tabular}{%s}\n";
     private final static String endTabular = "\\end{tabular}\n";
-    private final static String leftBrace= "\\ldelim\\{{%s}{*}&";
-    private final static String rightBrace= "\\rdelim\\}{%s}{*}";
-    private final static String rightBars= "\\rdelim\\|{%s}{*}";
+    private final static String leftBrace = "\\ldelim\\{{%s}{*}&";
+    private final static String rightBrace = "\\rdelim\\}{%s}{*}";
+    private final static String rightBars = "\\rdelim\\|{%s}{*}";
 
-    private final static String latexRowEndNewline = "\\\\\n";
+    public final static String latexRowEndNewline = "\\\\\n";
 
     private static final Map<TsfNote.Length, String> lengthToCol = new HashMap<>();
+
     static {
         lengthToCol.put(TsfNote.Length.FULL, "F");
         lengthToCol.put(TsfNote.Length.HALF_QUARTER, "HQ");
@@ -91,10 +92,13 @@ public class ScorePart {
         ColsLine colsLine = getColsLine();
         String cols;
 
+        boolean autoCols = true;
+
         if (colsLine == null) {
             cols = "B " + getCols() + " B";
         } else {
             cols = "B " + colsLine.toLatex() + " B";
+            autoCols = false;
         }
 
         for (SongLine songLine : songLines) {
@@ -104,12 +108,12 @@ public class ScorePart {
             if (songLine instanceof NoteLine noteLine) {
                 if (firstBracketLine) {
                     latexBuilder.append(leftBrace.formatted(countBracedLines))
-                            .append(noteLineToLatex(noteLine, cols))
+                            .append(noteLineToLatex(noteLine, cols, autoCols))
                             .append(isEndRow ? rightBars.formatted(countBracedLines) : rightBrace.formatted(countBracedLines))
                             .append(latexRowEndNewline);
                     firstBracketLine = false;
                 } else {
-                    latexBuilder.append("&").append(noteLineToLatex(noteLine, cols)).append(latexRowEndNewline);
+                    latexBuilder.append("&").append(noteLineToLatex(noteLine, cols, autoCols)).append(latexRowEndNewline);
                 }
             }
             if (songLine instanceof TextLine textLine) {
@@ -143,7 +147,7 @@ public class ScorePart {
         return isEndRow;
     }
 
-    private String noteLineToLatex(NoteLine noteLine, String cols) {
+    private String noteLineToLatex(NoteLine noteLine, String cols, boolean autoCols) {
         cols = cols.replace(" ", "").replace("B", "");
         StringBuilder latexBuilder = new StringBuilder();
         List<TsfNote> notes = noteLine.getTsfNotes();
@@ -158,24 +162,31 @@ public class ScorePart {
             throw new RuntimeException("cols size " + cols.length() + " must be larger than notes size " + notes.size());
         }
 
-        TsfNote note;
-        int noteColCount = 1;
-        for (char c : cols.toCharArray()) {
-            if (colTime < noteTime) {
-                if (noteColCount == 1) {
-                    latexBuilder.append("&");
+        if (autoCols) {
+            TsfNote note;
+            int noteColCount = 1;
+            for (char c : cols.toCharArray()) {
+                if (colTime < noteTime) {
+                    if (noteColCount == 1) {
+                        latexBuilder.append("&");
+                    } else {
+                        noteColCount--;
+                    }
                 } else {
-                    noteColCount--;
+                    note = notes.get(notePos++);
+                    noteColCount = note.getColCount();
+                    latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
+                    noteTime += lengthToInt.get(note.getLength());
                 }
-            } else {
-                note = notes.get(notePos++);
-                noteColCount = note.getColCount();
-                latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
-                noteTime += lengthToInt.get(note.getLength());
-            }
 
-            colTime += colToInt.get(c);
+                colTime += colToInt.get(c);
+            }
+        } else {
+            for (TsfNote note : notes) {
+                latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
+            }
         }
+
 
         return latexBuilder.toString();
     }

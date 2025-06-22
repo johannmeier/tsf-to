@@ -62,19 +62,4 @@ Add verse numbers to text lines:
     2. hello
 
 
-## new idea
-
-* Tabular only with equal size columns 
-* Placement of half, quarter, third, etc. ist made in the cell
-* Text and symbol lines 
-  * Position with tonic-solfa signs 
-    * '.' -> Text starts at the middle of the column width
-    * '.,' -> Text starts at the third quarter of the column width
-  * Each word start left of the cell and is one column long
-  * '_' is a blank
-  * '*' is a filler for one column
-  * '*Hello' is Hello right aligned (in total 2 columns) 
-  * 'Hello**' is Hello left aligned (in total 3 columns)
-  * '.Hello**' is Hello left aligned, starting at the half of the first column (in total 3 columns)
-  * '.*Hello' is Hello left aligned, starting at the half of the first column (in total 3 columns)
 
