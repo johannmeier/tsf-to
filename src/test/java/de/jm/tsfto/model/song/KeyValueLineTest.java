@@ -26,4 +26,10 @@ class KeyValueLineTest {
         assertEquals("J.S. Bach", KeyValueLine.of("C: J.S. Bach").getValue());
         assertEquals("60", KeyValueLine.of("bpm: 60").getValue());
     }
+
+    @Test
+    void isKeyValue() {
+        assertTrue(KeyValueLine.isKeyValue("b:50"));
+        assertTrue(KeyValueLine.isKeyValue("C: J.S. Bach"));
+    }
 }

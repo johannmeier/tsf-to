@@ -40,8 +40,10 @@ public class Latex {
 
         if (note.isContinue()) {
             latexBuilder.append("c");
+            latexBuilder.append(getUnderLatex(note.getUnderLength(), note.isUnderline()));
         } else if (note.isBreak()) {
             latexBuilder.append("b");
+            latexBuilder.append(getUnderLatex(note.getUnderLength(), note.isUnderline()));
         } else if (note.isKeyChange()) {
             latexBuilder.append("kc");
             latexBuilder.append("{\\n").append(getLatexNoteString(note.getKeyChangeOctave(), note.getKeyChangeNote(), note.getUnderLength(), note.isUnderline())).append('}');
@@ -60,7 +62,6 @@ public class Latex {
     static String getLatexNoteString(int octave, String note, String underLength, boolean underline) {
 
         String noteString;
-        String under = "";
 
         if (octave == 0) {
             noteString = "n";
@@ -74,15 +75,20 @@ public class Latex {
             noteString = "l[" + octave * -1 + "]";
         }
 
-        if (!underLength.isEmpty()) {
-            if (underline) {
-                under = "u[" + underLength + "]";
-            } else {
-                under = "p[" + underLength + "]";
-            }
-        }
+        String under = getUnderLatex(underLength, underline);
 
         return noteString + under + "{" + note + "}";
+    }
+
+    private static String getUnderLatex(String underLength, boolean underline) {
+        if (!underLength.isEmpty()) {
+            if (underline) {
+                return "u[" + underLength + "]";
+            } else {
+                return "p[" + underLength + "]";
+            }
+        }
+        return "";
     }
 
     public static String twoNotesOneColumnToLatex(TsfNote note, TsfNote otherNote) {

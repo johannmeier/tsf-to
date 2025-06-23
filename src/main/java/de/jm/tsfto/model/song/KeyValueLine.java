@@ -27,6 +27,10 @@ public class KeyValueLine extends SongLine {
         keyToLatex.put("fontsize", "\\%s");
         keyToLatex.put("newpage", "\\newpage");
         keyToLatex.put("landscape", "TODO");
+        keyToLatex.put("normal", "\\renewcommand\\stfs{\\normalsize}");
+        keyToLatex.put("small", "\\renewcommand\\stfs{\\footnotesize}");
+        keyToLatex.put("smaller", "\\renewcommand\\stfs{\\scriptsize}");
+        keyToLatex.put("tiny", "\\renewcommand\\stfs{\\small}");
 
     }
 
@@ -62,7 +66,7 @@ public class KeyValueLine extends SongLine {
     }
 
     public static boolean isKeyValue(String token) {
-        return token.indexOf(":") > 0 && token.length() > 2;
+        return token.matches("^[a-zA-Z]+:.*") & token.length() > 2;
     }
 
     public static String getValue(String line) {
