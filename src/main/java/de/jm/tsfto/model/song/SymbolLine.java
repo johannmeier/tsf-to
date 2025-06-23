@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static de.jm.tsfto.model.song.KeyValueLine.*;
 
@@ -65,8 +67,10 @@ public class SymbolLine extends SongLine {
             return "";
         }
 
+        String processedLine = processMultiCols(line);
+
         StringBuilder latexBuilder = new StringBuilder();
-        List<String> tokens = List.of(line.split(" "));
+        List<String> tokens = List.of(processedLine.split(" "));
 
         for (String token : tokens) {
             int cols = getColCount(token);
@@ -89,6 +93,18 @@ public class SymbolLine extends SongLine {
         return latexBuilder.toString();
     }
 
+
+    private static final Pattern multiColPattern = Pattern.compile("\\*(\\d+)($|\\s)");
+
+    static String processMultiCols(String line) {
+        Matcher matcher = multiColPattern.matcher(line);
+        while (matcher.find()) {
+            int cols = Integer.parseInt(matcher.group(1));
+            line = matcher.replaceFirst("* ".repeat(cols));
+        }
+        return line;
+    }
+
     static String processToken(String token) {
         String processToken = token.replaceAll("^\\*+", "");
         processToken = processToken.replaceAll("\\*+$", "");
@@ -109,8 +125,7 @@ public class SymbolLine extends SongLine {
                     if (keyValueToLatex.containsKey(key)) {
                         latexBuilder.append(keyValueToLatex.get(key).formatted(getValue(part)));
                     }
-                }
-                else {
+                } else {
                     latexBuilder.append("\\sign{%s}".formatted(part));
                 }
             }

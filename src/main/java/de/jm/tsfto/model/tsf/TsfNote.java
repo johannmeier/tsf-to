@@ -3,6 +3,8 @@ package de.jm.tsfto.model.tsf;
 import de.jm.tsfto.exception.InvalidNoteRuntimeException;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TsfNote {
     public static List<String> validNotes = List.of(
@@ -92,6 +94,14 @@ public class TsfNote {
         return Type.CONTINUE == getType();
     }
 
+    public boolean isTenuto() {
+        return postfix.contains("^");
+    }
+
+    public boolean isStaccato() {
+        return postfix.matches("(^|\\D)\\.(\\D|$)");
+    }
+
     public boolean isBreak() {
         return Type.BREAK == getType();
     }
@@ -106,6 +116,21 @@ public class TsfNote {
 
     public boolean isKeyChange() {
         return getKeyChangeNote() != null && !getKeyChangeNote().isEmpty();
+    }
+
+    public boolean isStack() {
+        return postfix.contains("%");
+    }
+
+    public String getStackedNote() {
+        Pattern p = Pattern.compile("%([a-z][,']*)");
+        if (isStack()) {
+            Matcher matcher = p.matcher(postfix);
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        }
+        return "";
     }
 
     public boolean isDoubleCol() {

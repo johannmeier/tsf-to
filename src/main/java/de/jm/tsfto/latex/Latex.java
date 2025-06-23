@@ -46,10 +46,10 @@ public class Latex {
             latexBuilder.append(getUnderLatex(note.getUnderLength(), note.isUnderline()));
         } else if (note.isKeyChange()) {
             latexBuilder.append("kc");
-            latexBuilder.append("{\\n").append(getLatexNoteString(note.getKeyChangeOctave(), note.getKeyChangeNote(), note.getUnderLength(), note.isUnderline())).append('}');
-            latexBuilder.append("{\\n").append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline())).append('}');
+            latexBuilder.append("{\\n").append(getLatexNoteString(note.getKeyChangeOctave(), note.getKeyChangeNote(), note.getUnderLength(), note.isUnderline(), note)).append('}');
+            latexBuilder.append("{\\n").append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline(), note)).append('}');
         } else if (note.isNote()) {
-            latexBuilder.append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline()));
+            latexBuilder.append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline(), note));
         }
 
         if (colCount > 2) {
@@ -59,7 +59,7 @@ public class Latex {
         }
     }
 
-    static String getLatexNoteString(int octave, String note, String underLength, boolean underline) {
+    static String getLatexNoteString(int octave, String note, String underLength, boolean underline, TsfNote tsfNote) {
 
         String noteString;
 
@@ -77,6 +77,15 @@ public class Latex {
 
         String under = getUnderLatex(underLength, underline);
 
+        if (tsfNote.isTenuto()) {
+            note = "\\ten{" + note + "}";
+        }
+        if (tsfNote.isStaccato()) {
+            note = "\\stac{" + note + "}";
+        }
+        if (tsfNote.isStack()) {
+            note = "\\tstack{" + note + "\\\\" + tsfNote.getStackedNote() + "}";
+        }
         return noteString + under + "{" + note + "}";
     }
 

@@ -47,6 +47,7 @@ class SymbolLineTest {
 
     @Test
     void toLatex() {
+        assertEquals("&&&", new SymbolLine("* * *").toLatex());
         assertEquals("\\tpart{A}&&\\sign{hello}&", new SymbolLine("p:A * hello").toLatex());
         assertEquals("\\tpart{A} \\fer&", new SymbolLine("p:A_^").toLatex());
         assertEquals("\\hfill\\coda&", new SymbolLine(">$").toLatex());
@@ -84,6 +85,14 @@ class SymbolLineTest {
         assertEquals(2, keyValues.size());
         assertEquals("b:50", keyValues.getFirst());
         assertEquals("key:A", keyValues.get(1));
+    }
+
+    @Test
+    void processMultiCols() {
+        assertEquals("* * hello", SymbolLine.processMultiCols("*2 hello"));
+        assertEquals("* * ", SymbolLine.processMultiCols("*2"));
+        assertEquals("*", SymbolLine.processMultiCols("*"));
+        assertEquals("* *", SymbolLine.processMultiCols("* *"));
     }
 
 }

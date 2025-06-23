@@ -7,6 +7,9 @@
   * Triplets are separated with /
   * Eighth are separated with a backtick (:d `d ,d `d .d :)
   * key change: -
+  * tenuto: ^
+  * staccato: .
+  * stack notes: %
 * _<float> underline number of notes
 * =<float> underpoint number of notes
 * two notes in one column: :d+ r (needed for formatting)

@@ -9,6 +9,7 @@
 \usepackage{tikz}
 \usepackage{multicol}
 \usepackage{amsmath}
+\usepackage{stackengine}
 
 \IfFileExists{lilyglyphs.sty}
 {
@@ -300,14 +301,39 @@
 %
 
 \newcommand\ac{\as\cs} % Accented Continue
+\newcommand\acu[2][1]{\as \ul{\cs}{\flc*\real{#1}}} % Third High Underline
+\newcommand\acp[2][1]{\as \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\dac{\as\cs&} % Double Accented Continue
+\newcommand\dacu[2][1]{\as \ul{\cs&}{\flc*\real{#1}}} % Third High Underline
+\newcommand\dacp[2][1]{\as \up{\cs&}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\mc{\ms\cs} % Measure Continue
+\newcommand\mcu[2][1]{\ms \ul{\cs}{\flc*\real{#1}}} % Third High Underline
+\newcommand\mcp[2][1]{\ms \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\dmc{\ms\cs&} % Double Measure Continue
+\newcommand\dmcu[2][1]{\ms \ul{\cs&}{\flc*\real{#1}}} % Third High Underline
+\newcommand\dmcp[2][1]{\ms \up{\cs&}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\nc{\ns\cs} % Normal Continue
+\newcommand\ncu[2][1]{\ns \ul{\cs}{\flc*\real{#1}}} % Third High Underline
+\newcommand\ncp[2][1]{\ns \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\dnc{\ns\cs&} % Double Normal Continue
+
 \newcommand\hc{\hs\cs} % Half Continue
+\newcommand\hcu[2][1]{\hs \ul{\cs}{\flc*\real{#1}}} % Third High Underline
+\newcommand\hcp[2][1]{\hs \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\tc{\ts\cs} % Third Continue
+\newcommand\tcu[2][1]{\ts \ul{\cs}{\flc*\real{#1}}} % Third High Underline
+\newcommand\tcp[2][1]{\ts \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\qc{\qs\cs} % Quarter Continue
+\newcommand\qcu[2][1]{\qs \ul{\cs}{\flc*\real{#1}}} % Third High Underline
+\newcommand\qcp[2][1]{\qs \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+
 \newcommand\dc{\ds\cs&} % Double Measure Continue
 
 %
@@ -413,6 +439,19 @@
     \large$\substack{#1\\#2}$
     \endgroup % Group safe lengths
 }%
+
+\newcommand{\ten}[1]{%
+    \begingroup%
+    \stackon[0px]{#1}{-}
+    \endgroup % Group safe lengths
+}%
+
+\newcommand{\stac}[1]{%
+    \begingroup%
+    \stackon[2px]{#1}{.}
+    \endgroup % Group safe lengths
+}%
+
 
 \newenvironment{tonic-row}[2]
 {
