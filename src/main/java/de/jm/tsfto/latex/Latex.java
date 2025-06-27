@@ -24,6 +24,23 @@ public class Latex {
         prefixToLatex.put("", "e");
     }
 
+    public static final Map<String, String> prefixToPlainLatex = new HashMap<>();
+
+    static {
+        prefixToPlainLatex.put("!", "\\ms");
+        prefixToPlainLatex.put("|", "\\ms");
+        prefixToPlainLatex.put("!!", "\\ds");
+        prefixToPlainLatex.put("||", "\\ds");
+        prefixToPlainLatex.put(";", "\\as");
+        prefixToPlainLatex.put(":", "\\ns");
+        prefixToPlainLatex.put(".,", "\\hfill\\hs&\\qs");
+        prefixToPlainLatex.put("//", "\\tts");
+        prefixToPlainLatex.put(".", "\\hs");
+        prefixToPlainLatex.put(",", "\\qs");
+        prefixToPlainLatex.put("/", "\\ts");
+        prefixToPlainLatex.put("", "\\es");
+    }
+
     public static String tsfNoteToLatex(TsfNote note) {
         if (note.isEndOfPart()) {
             return "";
@@ -84,7 +101,7 @@ public class Latex {
             note = "\\stac{" + note + "}";
         }
         if (tsfNote.isStack()) {
-            note = "\\tstack{" + note + "\\\\" + tsfNote.getStackedNote() + "}";
+            note = "\\lstack{" + note + "}{" + tsfNote.getStackedNote() + "}";
         }
         return noteString + under + "{" + note + "}";
     }
@@ -100,7 +117,21 @@ public class Latex {
         return "";
     }
 
-    public static String twoNotesOneColumnToLatex(TsfNote note, TsfNote otherNote) {
-        return tsfNoteToLatex(note) + "\\hfill" + tsfNoteToLatex(otherNote);
+    public static String twoNotesMultiColumnToLatex(TsfNote note, TsfNote otherNote) {
+        return "\\multicolumn{2}{L}{" + tsfNoteToLatex(note) + "\\hfill" + tsfNoteToLatex(otherNote) + "}";
+    }
+
+    public static String getPlainNoteLatex(TsfNote tsfNote) {
+        StringBuilder latexBuilder = new StringBuilder();
+        int octave = tsfNote.getOctave();
+        String note = tsfNote.getNote();
+        if (octave < 0) {
+            latexBuilder.append("\\lo[%s]{%s}".formatted(-octave, note));
+        } else if (octave > 0) {
+            latexBuilder.append("\\hi[%s]{%s}".formatted(octave, note));
+        } else {
+            latexBuilder.append(note);
+        }
+        return latexBuilder.toString();
     }
 }

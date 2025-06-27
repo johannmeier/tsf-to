@@ -3,6 +3,7 @@ package de.jm.tsfto.model.song;
 import de.jm.tsfto.latex.Latex;
 import de.jm.tsfto.model.tsf.TsfNote;
 import de.jm.tsfto.parser.MergeCols;
+import de.jm.tsfto.parser.TsfTokenParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -165,7 +166,9 @@ public class ScorePart {
         if (autoCols) {
             TsfNote note;
             int noteColCount = 1;
-            for (char c : cols.toCharArray()) {
+            for (int i = 0; i < cols.length(); i++) {
+                char c = cols.charAt(i);
+
                 if (colTime < noteTime) {
                     if (noteColCount == 1) {
                         latexBuilder.append("&");
@@ -175,7 +178,18 @@ public class ScorePart {
                 } else {
                     note = notes.get(notePos++);
                     noteColCount = note.getColCount();
-                    latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
+                    if (note.isTwoNotesOneColumn()) {
+                        TsfNote nextNote = notes.get(notePos++);
+                        latexBuilder.append(Latex.twoNotesMultiColumnToLatex(note, nextNote));
+                        noteTime += lengthToInt.get(nextNote.getLength());
+                    } else if (note.isStack()) {
+                        TsfNote secondNote = TsfTokenParser.getPlainNote(note.getStackedNote());
+                        String space = "1px";
+                        latexBuilder.append(Latex.prefixToPlainLatex.get(note.getPrefix()));
+                        latexBuilder.append("\\lstack[%s]{%s}{%s}&".formatted(space, Latex.getPlainNoteLatex(note), Latex.getPlainNoteLatex(secondNote)));
+                    } else {
+                        latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
+                    }
                     noteTime += lengthToInt.get(note.getLength());
                 }
 

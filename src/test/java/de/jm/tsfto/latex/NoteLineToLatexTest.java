@@ -63,7 +63,7 @@ public class NoteLineToLatexTest {
         assertEquals("\\dhc", tsfNoteToLatex(new TsfNote(0, "-", TsfNote.Length.HALF, TsfNote.Accent.NONE, ".", "*", 0, null)));
 
         // two notes in one column (d+ r)
-        assertEquals("\\mn{d}\\hfill\\hh{r}", Latex.twoNotesOneColumnToLatex(
+        assertEquals("\\multicolumn{2}{L}{\\mn{d}\\hfill\\hh{r}}", Latex.twoNotesMultiColumnToLatex(
                 new TsfNote(0, "d", TsfNote.Length.HALF, TsfNote.Accent.BAR, "!", "", 0, null),
                 new TsfNote(1, "r", TsfNote.Length.HALF, TsfNote.Accent.UNKNOWN, ".", "", 0, null)
         ));

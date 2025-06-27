@@ -1,6 +1,9 @@
 \ProvidesPackage{tonic-solfa}
 
-\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+%\usepackage{etoolbox}
+%\AtBeginEnvironment{tabular}{\sffamily} % Changes all tabular environments to sans-serif
 \usepackage[normalem]{ulem}
 \usepackage{array}
 \usepackage{calc}
@@ -440,15 +443,22 @@
     \endgroup % Group safe lengths
 }%
 
+\newcommand{\lstack}[3][1px]{%
+    \begingroup%
+    \footnotesize%
+    \raisebox{-.40em}{\stackon[#1]{#3}{#2}}%
+    \endgroup % Group safe lengths
+}%
+
 \newcommand{\ten}[1]{%
     \begingroup%
-    \stackon[0px]{#1}{-}
+    $\overline{\text{#1}}$%
     \endgroup % Group safe lengths
 }%
 
 \newcommand{\stac}[1]{%
     \begingroup%
-    \stackon[2px]{#1}{.}
+    \stackon[1px]{#1}{.}%
     \endgroup % Group safe lengths
 }%
 

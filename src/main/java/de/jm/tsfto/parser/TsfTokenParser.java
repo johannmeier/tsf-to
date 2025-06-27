@@ -274,4 +274,9 @@ public class TsfTokenParser {
     public static boolean isEndToken(String token) {
         return "!!".equals(token) || "||".equals(token);
     }
+
+    public static TsfNote getPlainNote(String token) {
+        return new TsfNote(getOctave(token), getNote(token), TsfNote.Length.UNKNOWN, TsfNote.Accent.UNKNOWN,
+                           getPrefix(token), getPostfix(token), 0, null);
+    }
 }

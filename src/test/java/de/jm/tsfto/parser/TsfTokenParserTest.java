@@ -175,4 +175,27 @@ class TsfTokenParserTest {
         assertEquals(TsfNote.Length.EIGHTS, TsfTokenParser.min(TsfNote.Length.HALF, TsfNote.Length.EIGHTS));
     }
 
+    @Test
+    void getPlainNote() {
+        TsfNote note;
+        note = TsfTokenParser.getPlainNote(":d,");
+        assertPlainNote(-1, "d",  note);
+
+        note = TsfTokenParser.getPlainNote("r'");
+        assertPlainNote(1, "r",  note);
+
+        note = TsfTokenParser.getPlainNote(":d'%s");
+        assertPlainNote(1, "d",  note);
+        assertEquals("%s",  note.getPostfix());
+    }
+
+    private void assertPlainNote(int octave, String note, TsfNote tsfNote) {
+        assertNotNull(note);
+        assertEquals(TsfNote.Length.UNKNOWN, tsfNote.getLength());
+        assertEquals(TsfNote.Accent.UNKNOWN, tsfNote.getAccent());
+        assertEquals(octave, tsfNote.getOctave());
+        assertEquals(note, tsfNote.getNote());
+        assertEquals(TsfNote.Type.NOTE, tsfNote.getType());
+    }
+
 }

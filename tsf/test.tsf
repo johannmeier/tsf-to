@@ -2,8 +2,10 @@
 small:
 
 sql: 1.12cm
+!d .r+ ,m :f :s
+
 s: p:B
-!m%d  .d :     :s .m  :      !f .m :d .s, :-  :-       !f .m :d .l, :- .l, :s, .l, !f .m :d .s, :-  :-
+!m,%d .d :     :s .m  :      !f .m :d .s, :-  :-       !f .m :d .l, :- .l, :s, .l, !f .m :d .s, :-  :-
 !Ba_du**  *  ba da  *  *  !ba da da da  *   *   *   !ba da da da  *  da  da  da !ba da da da,*    *
 !d    :- .d :t,    :- .t, !l,   :- .l, :s, :-  .s,  !f,   :- .f, :f,    :-  .f, !d    :- .d  :s, :-
 !Ba*   *  bu ba  *  *  ba !ba*  *  ba   ba  *   ba  !ba *  *  ba  ba  *  *   ba !ba *  *  ba  ba  *
@@ -13,3 +15,5 @@ cols: HHHHHHHH FFTTTTTT FFHHHH
 s: *  *   *  *  *     *   *  *    *  *  * *  * *  * *  *     *  * *    *    *
 !-_1   .s  :s .s :s    .s  :- .s   !- :- :s*  /l*  /ta* !s    :- : .s   :l   .ta
 !liv-ing* in a  world_of* *fools !   *  break-ing_us***** !down, * **when_they  all
+
+

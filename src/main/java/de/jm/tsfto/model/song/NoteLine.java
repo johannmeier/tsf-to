@@ -18,13 +18,14 @@ public class NoteLine extends SongLine {
     }
 
     @Override
+    // TODO: not used in ScorePart
     public String toLatex() {
         StringBuilder latexBuilder = new StringBuilder();
         List<TsfNote> tsfNotes = getTsfNotes();
         for (int i = 0; i < tsfNotes.size(); i++) {
             TsfNote tsfNote = tsfNotes.get(i);
             if (tsfNote.isTwoNotesOneColumn()) {
-                latexBuilder.append(Latex.twoNotesOneColumnToLatex(tsfNote, tsfNotes.get(i++)));
+                latexBuilder.append(Latex.twoNotesMultiColumnToLatex(tsfNote, tsfNotes.get(i++)));
             } else {
                 latexBuilder.append(Latex.tsfNoteToLatex(tsfNote));
             }
