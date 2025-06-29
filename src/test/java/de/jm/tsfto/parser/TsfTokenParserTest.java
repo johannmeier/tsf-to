@@ -72,21 +72,10 @@ class TsfTokenParserTest {
         assertEquals("t", TsfTokenParser.getNote("!t''_"));
         assertEquals("ba", TsfTokenParser.getNote("!ba="));
 
-        assertEquals("t", TsfTokenParser.getNote(":l-t,"));
+        assertEquals("l", TsfTokenParser.getNote(":l-t,"));
 
         assertEquals("", TsfTokenParser.getNote("."));
         assertEquals("-", TsfTokenParser.getNote(":-"));
-    }
-
-    @Test
-    void keyChangeNote() {
-        assertEquals("r", TsfTokenParser.getKeyChangeNote("r,-d,") );
-        assertEquals("l", TsfTokenParser.getKeyChangeNote(":l-t,"));
-        assertEquals("", TsfTokenParser.getKeyChangeNote(null));
-        assertEquals("", TsfTokenParser.getKeyChangeNote(""));
-        assertEquals("r", TsfTokenParser.getKeyChangeNote("r'-d'") );
-
-        assertEquals("", TsfTokenParser.getKeyChangeNote(":l,"));
     }
 
     @Test

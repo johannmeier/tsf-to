@@ -1,6 +1,7 @@
 package de.jm.tsfto.latex;
 
 import de.jm.tsfto.model.tsf.TsfNote;
+import de.jm.tsfto.parser.TsfTokenParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,8 +64,9 @@ public class Latex {
             latexBuilder.append(getUnderLatex(note.getUnderLength(), note.isUnderline()));
         } else if (note.isKeyChange()) {
             latexBuilder.append("kc");
-            latexBuilder.append("{\\n").append(getLatexNoteString(note.getKeyChangeOctave(), note.getKeyChangeNote(), note.getUnderLength(), note.isUnderline(), note)).append('}');
-            latexBuilder.append("{\\n").append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline(), note)).append('}');
+            TsfNote secondNote = TsfTokenParser.getPlainNote(note.getSecondNote());
+            latexBuilder.append("{\\p").append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline(), note)).append('}');
+            latexBuilder.append("{\\p").append(getLatexNoteString(secondNote.getOctave(), secondNote.getNote(), secondNote.getUnderLength(), secondNote.isUnderline(), secondNote)).append('}');
         } else if (note.isNote()) {
             latexBuilder.append(getLatexNoteString(note.getOctave(), note.getNote(), note.getUnderLength(), note.isUnderline(), note));
         }
@@ -101,7 +103,7 @@ public class Latex {
             note = "\\stac{" + note + "}";
         }
         if (tsfNote.isStack()) {
-            note = "\\lstack{" + note + "}{" + tsfNote.getStackedNote() + "}";
+            note = "\\lstack{" + note + "}{" + tsfNote.getSecondNote() + "}";
         }
         return noteString + under + "{" + note + "}";
     }

@@ -183,7 +183,7 @@ public class ScorePart {
                         latexBuilder.append(Latex.twoNotesMultiColumnToLatex(note, nextNote));
                         noteTime += lengthToInt.get(nextNote.getLength());
                     } else if (note.isStack()) {
-                        TsfNote secondNote = TsfTokenParser.getPlainNote(note.getStackedNote());
+                        TsfNote secondNote = TsfTokenParser.getPlainNote(note.getSecondNote());
                         String space = "1px";
                         latexBuilder.append(Latex.prefixToPlainLatex.get(note.getPrefix()));
                         latexBuilder.append("\\lstack[%s]{%s}{%s}&".formatted(space, Latex.getPlainNoteLatex(note), Latex.getPlainNoteLatex(secondNote)));

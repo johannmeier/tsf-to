@@ -23,18 +23,14 @@ public class TsfNote {
     private final Accent accent;
     private final String prefix;
     private final String postfix;
-    private final int keyChangeOctave;
-    private final String keyChangeNote;
 
-    public TsfNote(int octave, String note, Length length, Accent accent, String prefix, String postfix, int keyChangeOctave, String keyChangeNote) {
+    public TsfNote(int octave, String note, Length length, Accent accent, String prefix, String postfix) {
         this.octave = octave;
         this.note = note;
         this.length = length;
         this.accent = accent;
         this.prefix = prefix;
         this.postfix = postfix;
-        this.keyChangeOctave = keyChangeOctave;
-        this.keyChangeNote = keyChangeNote;
     }
 
     public Type getType() {
@@ -81,14 +77,9 @@ public class TsfNote {
         return postfix;
     }
 
-    public int getKeyChangeOctave() {
-        return keyChangeOctave;
+    public boolean isKeyChange() {
+        return postfix.contains("-");
     }
-
-    public String getKeyChangeNote() {
-        return keyChangeNote;
-    }
-
 
     public boolean isContinue() {
         return Type.CONTINUE == getType();
@@ -114,17 +105,13 @@ public class TsfNote {
         return Type.NOTE == getType();
     }
 
-    public boolean isKeyChange() {
-        return getKeyChangeNote() != null && !getKeyChangeNote().isEmpty();
-    }
-
     public boolean isStack() {
         return postfix.contains("%");
     }
 
-    public String getStackedNote() {
-        Pattern p = Pattern.compile("%([a-z][,']*)");
-        if (isStack()) {
+    public String getSecondNote() {
+        Pattern p = Pattern.compile("[-%]([a-z]+[,']*)");
+        if (isStack() || isKeyChange()) {
             Matcher matcher = p.matcher(postfix);
             if (matcher.find()) {
                 return matcher.group(1);

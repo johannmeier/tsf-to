@@ -64,7 +64,7 @@ public class TsfTokenParser {
             if (length == TsfNote.Length.UNKNOWN && !isEndToken(current()) && next() == null) {
                 length = TsfNote.Length.FULL;
             }
-            tsfNotes.add(new TsfNote(getOctave(), getNote(), length, getAccent(), getPrefix(), getPostfix(), getKeyChangeOctave(), getKeyChangeNote()));
+            tsfNotes.add(new TsfNote(getOctave(), getNote(), length, getAccent(), getPrefix(), getPostfix()));
         }
         return tsfNotes;
     }
@@ -113,15 +113,7 @@ public class TsfTokenParser {
             throw new InvalidNoteRuntimeException(tsfToken);
         }
 
-        String note = getFirstNote(tsfToken);
-        String afterNote = tsfToken.substring(note.length() + getPrefix(tsfToken).length());
-
-        if (!afterNote.isEmpty() && '-' == afterNote.charAt(0)) {
-            // key change
-            note = getNote(afterNote.substring(1));
-        }
-
-        return note;
+        return getFirstNote(tsfToken);
     }
 
     TsfNote.Length getLength() {
@@ -206,15 +198,9 @@ public class TsfTokenParser {
 
         String prefix = getPrefix(tsfToken);
         String note = getNote(tsfToken);
-        String keyChangeNote = getKeyChangeNote(tsfToken);
         int octave = getOctave(tsfToken);
-        int keyChangeOctave = getKeyChangeOctave(tsfToken);
 
-        return tsfToken.substring(prefix.length() + note.length() + keyChangeNote.length() + Math.abs(octave) + Math.abs(keyChangeOctave));
-    }
-
-    int getKeyChangeOctave() {
-        return getKeyChangeOctave(current());
+        return tsfToken.substring(prefix.length() + note.length() + Math.abs(octave));
     }
 
     static int getKeyChangeOctave(String tsfToken) {
@@ -225,21 +211,6 @@ public class TsfTokenParser {
         String[] notes = tsfToken.split("-");
 
         return getOctave(notes[0]);
-    }
-
-    String getKeyChangeNote() {
-        return getKeyChangeNote(current());
-    }
-
-    static String getKeyChangeNote(String tsfToken) {
-        if (tsfToken == null || !tsfToken.contains("-")) {
-            return "";
-        }
-
-        String[] notes = tsfToken.split("-");
-
-        return getNote(notes[0]);
-
     }
 
     private static String getFirstNote(String tsfToken) {
@@ -277,6 +248,6 @@ public class TsfTokenParser {
 
     public static TsfNote getPlainNote(String token) {
         return new TsfNote(getOctave(token), getNote(token), TsfNote.Length.UNKNOWN, TsfNote.Accent.UNKNOWN,
-                           getPrefix(token), getPostfix(token), 0, null);
+                           getPrefix(token), getPostfix(token));
     }
 }

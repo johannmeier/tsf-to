@@ -117,7 +117,8 @@
 \newcommand\dkc[2]{\ds\hit{#1}\hspace{1.3px}#2} % Key Change
 \newcommand\mkc[2]{\ms\hit{#1}\hspace{1.3px}#2} % Key Change
 \newcommand\akc[2]{\as\hit{#1}\hspace{1.3px}#2} % Key Change
-\newcommand\nkc[2]{\hit{#1}\hspace{1.3px}#2} % Key Change
+\newcommand\nkc[2]{\ns\hit{#1}\hspace{1.3px}#2} % Key Change
+\newcommand\hkc[2]{\hs\hit{#1}\hspace{1.3px}#2} % Key Change
 
 \newcommand\pn[1]{#1} % Plain Note
 \newcommand\ph[1]{\hi{#1}} % Plain High Note
@@ -422,7 +423,11 @@
 \newcommand\decrescsign{\hspace{0.3em}\decrescHairpin}
 \newcommand\crescsign{\hspace{0.3em}\crescHairpin}
 
-\newcommand\mnbr[1]{\scriptsize\textit{#1}}
+\newcommand\mnbr[1]{%
+    \begingroup%
+    \scriptsize\textit{#1}%
+    \endgroup%
+}
 
 \newcommand{\tpart}[1]{%
     \begingroup%
