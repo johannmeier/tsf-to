@@ -11,6 +11,7 @@ import java.util.List;
 import static de.jm.tsfto.model.song.KeyValueLine.getValue;
 
 public class SongModel {
+    private long barCount = 1;
 
     private static final String beginDocument = """
             \\documentclass[a4paper, 12pt]{article}
@@ -89,10 +90,11 @@ public class SongModel {
         for (Object object : getSongLines()) {
             if (object instanceof VersePart versePart) {
                 latexBuilder.append(versePart.toLatex()).append('\n');
-            } else if (object instanceof ScorePart) {
-                latexBuilder.append(((ScorePart) object).toLatex()).append('\n');
-            }  else if (object instanceof SongLine) {
-                latexBuilder.append(((SongLine) object).toLatex()).append('\n');
+            } else if (object instanceof ScorePart scorePart) {
+                latexBuilder.append(scorePart.toLatex(barCount)).append('\n');
+                barCount += scorePart.getBarCount();
+            }  else if (object instanceof SongLine songLine) {
+                latexBuilder.append(songLine.toLatex()).append('\n');
             } else {
                 throw new RuntimeException("Unknown SongModel object: " + object);
             }

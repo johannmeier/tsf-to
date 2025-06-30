@@ -5,12 +5,10 @@ import de.jm.tsfto.model.tsf.TsfNote;
 import de.jm.tsfto.parser.MergeCols;
 import de.jm.tsfto.parser.TsfTokenParser;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ScorePart {
+    private static int countScorePart = 1;
 
     private final static String beginTabular = "\\begin{tabular}{%s}\n";
     private final static String endTabular = "\\end{tabular}\n";
@@ -81,7 +79,7 @@ public class ScorePart {
                 '}';
     }
 
-    public String toLatex() {
+    public String toLatex(long barCount) {
         StringBuilder latexBuilder = new StringBuilder();
 
         int countSymbolAndColsLinesAtBeginning = getCountSymbolAndColsLinesAtBeginning();
@@ -102,12 +100,20 @@ public class ScorePart {
             autoCols = false;
         }
 
-        for (SongLine songLine : songLines) {
+        for (int i = 0; i < songLines.size(); i++) {
+            SongLine songLine = songLines.get(i);
             if (songLine instanceof SymbolLine symbolLine) {
+                if (countScorePart % 2 == 0 && (i + 1) < songLines.size() && songLines.get(i + 1) instanceof NoteLine) {
+                    latexBuilder.append("\\mnbr{%s}\\ ".formatted(barCount));
+                }
                 latexBuilder.append("&").append(symbolLine.toLatex()).append(latexRowEndNewline);
             }
+
             if (songLine instanceof NoteLine noteLine) {
                 if (firstBracketLine) {
+                    if (countScorePart % 2 == 0 && (i == 0 || !(songLines.get(i - 1) instanceof SymbolLine))) {
+                        latexBuilder.append("\\mnbr{%s}\\ ".formatted(barCount)).append(latexRowEndNewline);
+                    }
                     latexBuilder.append(leftBrace.formatted(countBracedLines))
                             .append(noteLineToLatex(noteLine, cols, autoCols))
                             .append(isEndRow ? rightBars.formatted(countBracedLines) : rightBrace.formatted(countBracedLines))
@@ -122,6 +128,7 @@ public class ScorePart {
             }
         }
 
+        countScorePart++;
         return beginTabular.formatted(cols) + latexBuilder + endTabular;
     }
 
@@ -233,5 +240,15 @@ public class ScorePart {
             }
         }
         return null;
+    }
+
+    public long getBarCount() {
+        for (SongLine songLine : songLines) {
+            if (songLine instanceof NoteLine noteLine) {
+                String[] parts = noteLine.getLine().split("[!|]+");
+                return Arrays.stream(parts).filter(p -> !p.isEmpty()).count();
+            }
+        }
+        return 0;
     }
 }

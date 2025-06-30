@@ -53,7 +53,7 @@
 \newcolumntype{L}{@{}l@{}}
 \newcolumntype{R}{@{}r@{}}
 \newcolumntype{C}{@{}c@{}}
-\newcolumntype{B}{@{}m{0.8em}@{}}
+\newcolumntype{B}{@{}r@{}}
 
 \newcommand\flc{\the\flength} % Full Length Column
 
@@ -431,6 +431,7 @@
 
 \newcommand{\tpart}[1]{%
     \begingroup%
+    \,%
     \setlength{\fboxsep}{1pt}%
     \setlength{\fboxrule}{0.5pt}%
     \ensuremath{\fbox{#1}}%
