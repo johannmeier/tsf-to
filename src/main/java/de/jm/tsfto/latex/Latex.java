@@ -96,15 +96,33 @@ public class Latex {
 
         String under = getUnderLatex(underLength, underline);
 
-        if (tsfNote.isTenuto()) {
-            note = "\\ten{" + note + "}";
+
+
+        if (tsfNote.isPortato()) {
+            note = "\\tsfPort{" + note + "}";
+        } else {
+            if (tsfNote.isTenuto()) {
+                note = "\\tsfTen{" + note + "}";
+            }
+            if (tsfNote.isStaccato()) {
+                note = "\\tsfStac{" + note + "}";
+            }
         }
-        if (tsfNote.isStaccato()) {
-            note = "\\stac{" + note + "}";
+        if (tsfNote.isAccented()) {
+            note = "\\tsfAcc{" + note + "}";
         }
+        if (tsfNote.isMarcato()) {
+            note = "\\tsfMark{" + note + "}";
+        }
+
         if (tsfNote.isStack()) {
             note = "\\lstack{" + note + "}{" + tsfNote.getSecondNote() + "}";
         }
+
+        if (tsfNote.isText()) {
+            note = tsfNote.getPostfix();
+        }
+
         return noteString + under + "{" + note + "}";
     }
 

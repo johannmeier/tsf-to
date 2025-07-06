@@ -56,7 +56,7 @@ public class NoteLine extends SongLine {
             return line.startsWith("v:");
         }
 
-        final String validChars = "drmfsltaeib_=-+*0123456789!|;:.,/'?^% ";
+        final String validChars = "drmfsltaeib_=-+*0123456789!|;:.,/'?^%~>\" ";
         for (char c : line.toCharArray()) {
             if (validChars.indexOf(c) < 0) {
                 return false;

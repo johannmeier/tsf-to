@@ -1,19 +1,24 @@
 
-small:
+c: small:
+
+
+c: latex: \footnotesize
 
 sql: 1.12cm
-!d .r+ ,m :f :s
+s: key:D
+!d   .r~ :m^  .s. ;- :- !s~.  :- .s>  ;- :- ! :t  :- ;l  !s  :f     ;m   :r   !!
+!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh _oh*    oh   oh! !!
+!d   .r :m   .s   ;- :- !f  :- .f>   ;- :- ! :s  :- ;f  !m  :r     ;d   :t,  !!
+!d   .r :m   .s   ;- :- !t  :- .t   ;- :- ! :r' :- ;d' !d' :-     ;l   :-   !!
+!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh  *  *   oh!  *   !!
+!d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :s, :- ;s, !s, :- .s, ;l,  :t,  !!
+!Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh    *be  dum  dum !!
 
-s: p:B
-!m,%d .d :     :s .m  :      !f .m :d .s, :-  :-       !f .m :d .l, :- .l, :s, .l, !f .m :d .s, :-  :-
-!Ba_du**  *  ba da  *  *  !ba da da da  *   *   *   !ba da da da  *  da  da  da !ba da da da,*    *
-!d    :- .d :t,    :- .t, !l,   :- .l, :s, :-  .s,  !f,   :- .f, :f,    :-  .f, !d    :- .d  :s, :-
-!Ba*   *  bu ba  *  *  ba !ba*  *  ba   ba  *   ba  !ba *  *  ba  ba  *  *   ba !ba *  *  ba  ba  *
-
-sql: 1.5cm
-cols: HHHHHHHH FFTTTTTT FFHHHH
-s: *  *   *  *  *     *   *  *    *  *  * *  * *  * *  *     *  * *    *    *
-!-_1   .s  :s .s :s    .s  :- .s   !- :- :s*  /l*  /ta* !s    :- : .s   :l   .ta
-!liv-ing* in a  world_of* *fools !   *  break-ing_us***** !down, * **when_they  all
-
+s: p:A
+!d   .r :m   .s   ;-     :-    !-   :m   ;r    :d    !ma  :-     ;- :-  !r  :-     ;-     :-
+!Have_a_nice_day,******        !     you _need-_n't* !wor- *  *   *  *  !ry. *  *   *  *   *
+!d   .r :d   .m   ;-     :-    !-   :d   ;r    :d    !d   :-     ;- :-  !r  :-     ;-     :-
+!d'     :-   .d'  ;- .d' :d'   !l_3 :s   ;-    :s    !la  :- .la ;- :la !s  :-     ;-     :-
+!Dum.**      _Have*   a   nice !day, *    *     oh   !oh     *oh  *  oh !oh,   *be    *dum dum
+!d      :-   .d   ;- .d  :d    !d   :-   ;-    :m    !f   :- .f  ;- :f  !s  :- .s, ;- .l, :t,
 

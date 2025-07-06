@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class TsfNote {
     public static List<String> validNotes = List.of(
-            "da", "d", "di", "ra", "r", "ri", "ma", "m", "mi", "fa", "f", "fi", "sa", "s", "si", "la", "l", "li", "ta", "t", "ti", "ba", "-"
+            "da", "d", "di", "ra", "r", "ri", "ma", "m", "mi", "fa", "f", "fi", "sa", "s", "si", "la", "l", "li", "ta", "t", "ti", "ba", "-", "\""
     );
 
     public enum Length {EIGHTS, SIXTH, QUARTER, THIRD, HALF, TWO_THIRDS, HALF_QUARTER, FULL, UNKNOWN}
@@ -86,11 +86,27 @@ public class TsfNote {
     }
 
     public boolean isTenuto() {
-        return postfix.contains("^");
+        return postfix.contains("~");
     }
 
     public boolean isStaccato() {
         return postfix.matches("(^|\\D)\\.(\\D|$)");
+    }
+
+    public boolean isPortato() {
+        return isStaccato() && isTenuto();
+    }
+
+    public boolean isAccented() {
+        return postfix.contains(">");
+    }
+
+    public boolean isMarcato() {
+        return postfix.contains("^");
+    }
+
+    public boolean isText() {
+        return note.startsWith("\"");
     }
 
     public boolean isBreak() {

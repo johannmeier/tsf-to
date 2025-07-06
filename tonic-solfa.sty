@@ -457,15 +457,40 @@
     \endgroup % Group safe lengths
 }%
 
-\newcommand{\ten}[1]{%
+\newcommand{\tsfTenu}[1]{%
     \begingroup%
     $\overline{\text{#1}}$%
     \endgroup % Group safe lengths
 }%
 
-\newcommand{\stac}[1]{%
+\newcommand{\tsfTen}[1]{%
     \begingroup%
-    \stackon[1px]{#1}{.}%
+    \stackon[-1px]{#1}{\tenuto}%
+    \endgroup % Group safe lengths
+}%
+
+
+\newcommand{\tsfStac}[1]{%
+    \begingroup%
+    \stackon[1px]{#1}{\lilyStaccato}%
+    \endgroup % Group safe lengths
+}%
+
+\newcommand{\tsfPort}[1]{%
+    \begingroup%
+    \stackon[-1px]{#1}{\portato}%
+    \endgroup % Group safe lengths
+}%
+
+\newcommand{\tsfAcc}[1]{%
+    \begingroup%
+    \stackon[0px]{#1}{\scriptsize\lilyAccent}%
+    \endgroup % Group safe lengths
+}%
+
+\newcommand{\tsfMark}[1]{%
+    \begingroup%
+    \stackon[-2px]{#1}{\marcato}%
     \endgroup % Group safe lengths
 }%
 

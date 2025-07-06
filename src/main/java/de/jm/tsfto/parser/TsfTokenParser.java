@@ -12,7 +12,7 @@ import static de.jm.tsfto.model.tsf.TsfNote.validNotes;
 
 public class TsfTokenParser {
 
-    public static final String TOKEN_NOTES = "drmfsltb-";
+    public static final String TOKEN_NOTES = "drmfsltb-\"";
     static final String validNoteFirstChars = TOKEN_NOTES + " ";
     static final String validNoteSecondChars = "ai";
 
@@ -178,7 +178,7 @@ public class TsfTokenParser {
 
         StringBuilder prefix = new StringBuilder();
         for (char c : token.toCharArray()) {
-            if (TOKEN_NOTES.contains(Character.toString(c)) || c == '-' || c == ' ') {
+            if (TOKEN_NOTES.contains(Character.toString(c)) || c == ' ') {
                 break;
             }
             prefix.append(c);
