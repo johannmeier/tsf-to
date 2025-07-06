@@ -65,7 +65,7 @@ public class SongModel {
             } else if (SymbolLine.matches(line)) {
                 scoreLines.add(new SymbolLine(getValue(line)));
             } else if (NoteLine.matches(line)) {
-                scoreLines.add(new NoteLine(line));
+                scoreLines.add(NoteLine.of(line));
             } else if (TextLine.matches(line)) {
                 scoreLines.add(new TextLine(line));
             } else {

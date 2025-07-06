@@ -58,6 +58,39 @@ public class ScorePart {
 
     private ScorePart(List<SongLine> songLines) {
         this.songLines = songLines;
+        setVoices();
+    }
+
+    private void setVoices() {
+        long countOfNoteLines = songLines.stream().filter(songLine -> songLine instanceof NoteLine).count();
+        int pos = 0;
+        for (SongLine songLine : songLines) {
+            if (songLine instanceof NoteLine noteLine) {
+                if (noteLine.getVoice().isEmpty()) {
+                    noteLine.setVoice(getVoice(pos, countOfNoteLines));
+                }
+                pos++;
+            }
+        }
+    }
+
+    private static String getVoice(int pos, long countOfNoteLines) {
+        if (countOfNoteLines == 1) {
+            return "s";
+        }
+        if (countOfNoteLines == 2) {
+            return pos == 0 ? "s" : "a";
+        }
+
+        if (countOfNoteLines == 3) {
+            return pos == 0 ? "s" : (pos == 1 ? "a" : "b");
+        }
+
+        if (countOfNoteLines == 4) {
+            return pos == 0 ? "s" : (pos == 1 ? "a" : (pos == 2 ? "t": "b"));
+        }
+
+        return "";
     }
 
     public static ScorePart of(List<SongLine> songLines) {

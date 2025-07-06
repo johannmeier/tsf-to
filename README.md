@@ -6,15 +6,20 @@
   * ; for accented note
   * Triplets are separated with /
   * Eighth are separated with a backtick (:d `d ,d `d .d :)
-  * key change: -
-  * tenuto: ^
-  * staccato: .
-  * stack notes: %
-* _<float> underline number of notes
-* =<float> underpoint number of notes
-* two notes in one column: :d+ r (needed for formatting)
-* ,, is ., in  column  (HQQ - HH) (needed for formatting)
-* double note: d* (needed for formatting)
+  * ,, is ., in  column  (HQQ - HH) (needed for formatting)
+  * text: "
+  * after note: 
+    * key change: -
+    * stack notes: %
+    * tenuto: ~
+    * staccato: .
+    * portato: tenuto + staccato ~.
+    * accented: >
+    * marcato: ^
+    * _<float> underline number of notes
+    * =<float> underpoint number of notes
+    * two notes in one column: :d+ r (needed for formatting)
+    * double note: d* (needed for formatting)
 * Question marks are ignored
 
 ## Symbol line

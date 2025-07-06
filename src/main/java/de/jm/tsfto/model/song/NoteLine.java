@@ -6,15 +6,30 @@ import de.jm.tsfto.parser.TsfTokenParser;
 
 import java.util.List;
 
+import static de.jm.tsfto.model.song.KeyValueLine.*;
+
 public class NoteLine extends SongLine {
 
+    private String voice;
 
-    public NoteLine(String line) {
+    private NoteLine(String line, String voice) {
         super(line);
+        this.voice = voice;
     }
 
     public static NoteLine of(String line) {
-        return new NoteLine(line);
+        String voice ="";
+        if (isKeyValue(line)) {
+            if ("v".equals(getKey(line))) {
+                String processedLine = getValue(line);
+                voice = processedLine.substring(0, processedLine.indexOf(' '));
+            }
+        }
+        return new NoteLine(line, voice);
+    }
+
+    public static NoteLine of(String line, String voice) {
+        return new NoteLine(line, voice);
     }
 
     @Override
@@ -34,8 +49,8 @@ public class NoteLine extends SongLine {
     }
 
     public static boolean matches(String line) {
-        if (line.startsWith("t:") || line.startsWith("s:")) {
-            return false;
+        if (isKeyValue(line)) {
+            return line.startsWith("v:");
         }
 
         final String validChars = "drmfsltaeib_=-+*0123456789!|;:.,/'?^% ";
@@ -73,4 +88,13 @@ public class NoteLine extends SongLine {
     public static List<String> getTokens(String line) {
         return List.of(line.split(" +"));
     }
+
+    public String getVoice() {
+        return voice;
+    }
+
+    public void setVoice(String voice) {
+        this.voice = voice;
+    }
+
 }

@@ -21,7 +21,39 @@ class ScorePartTest {
 
     @Test
     void getBarCount() {
-        assertEquals(2, ScorePart.of(List.of(new NoteLine("!d :r :m !d"))).getBarCount());
-        assertEquals(1, ScorePart.of(List.of(new NoteLine("!d :r :m !!"))).getBarCount());
+        assertEquals(2, ScorePart.of(List.of(NoteLine.of("!d :r :m !d"))).getBarCount());
+        assertEquals(1, ScorePart.of(List.of(NoteLine.of("!d :r :m !!"))).getBarCount());
+    }
+
+    @Test
+    void voice() {
+        ScorePart scorePart;
+        scorePart = ScorePart.of(List.of(NoteLine.of("!d :r :m !d")));
+        NoteLine noteLine = (NoteLine) scorePart.getSongLines().getFirst();
+        assertEquals("s", noteLine.getVoice());
+
+        scorePart = ScorePart.of(List.of(NoteLine.of("!d :r :m !d"), NoteLine.of("!d :r :m !d")));
+        noteLine = (NoteLine) scorePart.getSongLines().getFirst();
+        assertEquals("s", noteLine.getVoice());
+        noteLine = (NoteLine) scorePart.getSongLines().get(1);
+        assertEquals("a", noteLine.getVoice());
+
+        scorePart = ScorePart.of(List.of(NoteLine.of("!d :r :m !d"), NoteLine.of("!d :r :m !d"), NoteLine.of("!d :r :m !d")));
+        noteLine = (NoteLine) scorePart.getSongLines().getFirst();
+        assertEquals("s", noteLine.getVoice());
+        noteLine = (NoteLine) scorePart.getSongLines().get(1);
+        assertEquals("a", noteLine.getVoice());
+        noteLine = (NoteLine) scorePart.getSongLines().get(2);
+        assertEquals("b", noteLine.getVoice());
+
+        scorePart = ScorePart.of(List.of(NoteLine.of("!d :r :m !d"), NoteLine.of("!d :r :m !d"), NoteLine.of("!d :r :m !d"), NoteLine.of("!d :r :m !d")));
+        noteLine = (NoteLine) scorePart.getSongLines().getFirst();
+        assertEquals("s", noteLine.getVoice());
+        noteLine = (NoteLine) scorePart.getSongLines().get(1);
+        assertEquals("a", noteLine.getVoice());
+        noteLine = (NoteLine) scorePart.getSongLines().get(2);
+        assertEquals("t", noteLine.getVoice());
+        noteLine = (NoteLine) scorePart.getSongLines().get(3);
+        assertEquals("b", noteLine.getVoice());
     }
 }
