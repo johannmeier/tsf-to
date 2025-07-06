@@ -87,7 +87,7 @@ public class ScorePart {
         }
 
         if (countOfNoteLines == 4) {
-            return pos == 0 ? "s" : (pos == 1 ? "a" : (pos == 2 ? "t": "b"));
+            return pos == 0 ? "s" : (pos == 1 ? "a" : (pos == 2 ? "t" : "b"));
         }
 
         return "";
@@ -133,32 +133,45 @@ public class ScorePart {
             autoCols = false;
         }
 
+        if (hasVoice()) {
+            cols = "l" + cols;
+        }
+
         for (int i = 0; i < songLines.size(); i++) {
+            StringBuilder latexLine = new StringBuilder();
+            if (hasVoice()) {
+                latexLine.append("&");
+            }
+
             SongLine songLine = songLines.get(i);
             if (songLine instanceof SymbolLine symbolLine) {
                 if (countScorePart % 2 == 0 && (i + 1) < songLines.size() && songLines.get(i + 1) instanceof NoteLine) {
-                    latexBuilder.append("\\mnbr{%s}\\ ".formatted(barCount));
+                    latexLine.append("\\mnbr{%s}\\ ".formatted(barCount));
                 }
-                latexBuilder.append("&").append(symbolLine.toLatex()).append(latexRowEndNewline);
+                latexLine.append("&").append(symbolLine.toLatex()).append(latexRowEndNewline);
             }
 
             if (songLine instanceof NoteLine noteLine) {
+                if (hasVoice()) {
+                    latexLine.insert(0, noteLine.getVisibleVoice());
+                }
                 if (firstBracketLine) {
                     if (countScorePart % 2 == 0 && (i == 0 || !(songLines.get(i - 1) instanceof SymbolLine))) {
-                        latexBuilder.append("\\mnbr{%s}\\ ".formatted(barCount)).append(latexRowEndNewline);
+                        latexBuilder.append("&\\mnbr{%s}\\ ".formatted(barCount)).append(latexRowEndNewline);
                     }
-                    latexBuilder.append(leftBrace.formatted(countBracedLines))
-                            .append(noteLineToLatex(noteLine, cols, autoCols))
+                    latexLine.append(leftBrace.formatted(countBracedLines))
+                            .append(noteLineToLatex(noteLine, hasVoice() ? cols.substring(1) : cols, autoCols))
                             .append(isEndRow ? rightBars.formatted(countBracedLines) : rightBrace.formatted(countBracedLines))
                             .append(latexRowEndNewline);
                     firstBracketLine = false;
                 } else {
-                    latexBuilder.append("&").append(noteLineToLatex(noteLine, cols, autoCols)).append(latexRowEndNewline);
+                    latexLine.append("&").append(noteLineToLatex(noteLine, hasVoice() ? cols.substring(1) : cols, autoCols)).append(latexRowEndNewline);
                 }
             }
             if (songLine instanceof TextLine textLine) {
-                latexBuilder.append("&").append(textLine.toLatex()).append(latexRowEndNewline);
+                latexLine.append("&").append(textLine.toLatex()).append(latexRowEndNewline);
             }
+            latexBuilder.append(latexLine);
         }
 
         countScorePart++;
@@ -283,5 +296,16 @@ public class ScorePart {
             }
         }
         return 0;
+    }
+
+    private boolean hasVoice() {
+        for (SongLine songLine : songLines) {
+            if (songLine instanceof NoteLine noteLine) {
+                if (noteLine.getVoice() != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -18,14 +18,17 @@ public class NoteLine extends SongLine {
     }
 
     public static NoteLine of(String line) {
+        String processedLine = line;
         String voice ="";
         if (isKeyValue(line)) {
             if ("v".equals(getKey(line))) {
-                String processedLine = getValue(line);
-                voice = processedLine.substring(0, processedLine.indexOf(' '));
+                processedLine = getValue(line);
+                int indexOfSpace = processedLine.indexOf(" ");
+                voice = processedLine.substring(0, indexOfSpace);
+                processedLine = processedLine.substring(indexOfSpace + 1);
             }
         }
-        return new NoteLine(line, voice);
+        return new NoteLine(processedLine, voice);
     }
 
     public static NoteLine of(String line, String voice) {
@@ -91,6 +94,14 @@ public class NoteLine extends SongLine {
 
     public String getVoice() {
         return voice;
+    }
+
+    public String getVisibleVoice() {
+        if (Character.isUpperCase(voice.charAt(0))) {
+            return voice;
+        } else {
+            return "";
+        }
     }
 
     public void setVoice(String voice) {
