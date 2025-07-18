@@ -58,6 +58,8 @@ public class Latex {
 
         if (note.isContinue()) {
             latexBuilder.append("c");
+            latexBuilder.append(note.isCaesura() ? "\\tsfCaesura" : "");
+            latexBuilder.append(note.isBreath() ? "\\tsfBreath" : "");
             latexBuilder.append(getUnderLatex(note.getUnderLength(), note.isUnderline()));
         } else if (note.isBreak()) {
             latexBuilder.append("b");
@@ -96,8 +98,6 @@ public class Latex {
 
         String under = getUnderLatex(underLength, underline);
 
-
-
         if (tsfNote.isPortato()) {
             note = "\\tsfPort{" + note + "}";
         } else {
@@ -123,7 +123,10 @@ public class Latex {
             note = tsfNote.getPostfix();
         }
 
-        return noteString + under + "{" + note + "}";
+        String caesura = tsfNote.isCaesura() ? "\\tsfCaesura" : "";
+        String breath = tsfNote.isBreath() ? "\\tsfBreath" : "";
+
+        return noteString + under + "{" + note + "}" + breath + caesura;
     }
 
     private static String getUnderLatex(String underLength, boolean underline) {

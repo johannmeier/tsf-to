@@ -123,7 +123,12 @@ public class SymbolLine extends SongLine {
                 if (isKeyValue(part)) {
                     String key = getKey(part) + ":";
                     if (keyValueToLatex.containsKey(key)) {
-                        latexBuilder.append(keyValueToLatex.get(key).formatted(getValue(part)));
+                        String value = getValue(part);
+                        if ("key:".equals(key)) {
+                            value = value.replace("b", "\\kfl");
+                            value = value.replace("#", "\\ksh");
+                        }
+                        latexBuilder.append(keyValueToLatex.get(key).formatted(value));
                     }
                 } else {
                     latexBuilder.append("\\sign{%s}".formatted(part));

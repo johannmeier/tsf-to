@@ -478,7 +478,7 @@
 
 \newcommand{\tsfPort}[1]{%
     \begingroup%
-    \stackon[-1px]{#1}{\portato}%
+    \stackon[-1px]{#1}{\portatoDown}%
     \endgroup % Group safe lengths
 }%
 
@@ -493,6 +493,29 @@
     \stackon[-2px]{#1}{\marcato}%
     \endgroup % Group safe lengths
 }%
+
+\newcommand{\tsfCaesura}{%
+    \begingroup%
+    \hfill\lilyGlyph[raise=1.4]{scripts.caesura.straight}%
+    \endgroup % Group safe lengths
+}%
+
+\newcommand{\tsfBreath}{%
+    \begingroup%
+    \hfill\lilyGlyph[raise=1.2]{scripts.rcomma}\,%
+    \endgroup % Group safe lengths
+}%
+
+% TODO: \macron \wedge \sslash \divdot \dotdiv \dotminus \lessdot \varparallel \nntstile{abc}{def} \gtrdo \gtrdot
+
+
+
+
+
+
+
+
+
 
 
 \newenvironment{tonic-row}[2]

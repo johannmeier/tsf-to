@@ -125,6 +125,14 @@ public class TsfNote {
         return postfix.contains("%");
     }
 
+    public boolean isCaesura() {
+        return postfix.contains("//");
+    }
+
+    public boolean isBreath() {
+        return !isCaesura() && postfix.contains("/");
+    }
+
     public String getSecondNote() {
         Pattern p = Pattern.compile("[-%]([a-z]+[,']*)");
         if (isStack() || isKeyChange()) {

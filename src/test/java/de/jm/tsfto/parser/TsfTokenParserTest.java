@@ -98,6 +98,7 @@ class TsfTokenParserTest {
 
     @Test
     void postFix() {
+        assertEquals("/", TsfTokenParser.getPostfix(":-/"));
         assertEquals("+", TsfTokenParser.getPostfix("|s+"));
         assertEquals("", TsfTokenParser.getPostfix(null));
         assertEquals("", TsfTokenParser.getPostfix(""));
