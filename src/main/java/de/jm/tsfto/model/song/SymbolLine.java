@@ -54,6 +54,7 @@ public class SymbolLine extends SongLine {
         keyValueToLatex.put("b:", "\\mnbr{%s}");
         keyValueToLatex.put("p:", "\\tpart{%s}");
         keyValueToLatex.put("key:", "\\key{%s}");
+        keyValueToLatex.put("bpm:", "\\sign{P=%s}");
     }
 
 
@@ -115,6 +116,18 @@ public class SymbolLine extends SongLine {
 
     static String fillSymbols(String token) {
         StringBuilder latexBuilder = new StringBuilder();
+        if (token.startsWith("1.") || token.startsWith("2.")) {
+            String[] tokenParts = token.split("_");
+            String key = tokenParts[0].substring(0, 2);
+            String length = tokenParts[0].substring(2);
+            latexBuilder.append(symbolToLatex.get(key));
+            if (tokenParts.length > 1) {
+                String part2 = tokenParts[1];
+                latexBuilder.append("[%s]".formatted(symbolToLatex.getOrDefault(part2, part2)));
+            }
+            latexBuilder.append("{\\flc*\\real{%s}}".formatted(length));
+            return latexBuilder.toString();
+        }
         List<String> parts = SymbolParser.parse(token);
         for (String part : parts) {
             if (symbolToLatex.containsKey(part)) {

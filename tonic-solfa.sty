@@ -22,7 +22,7 @@
 
 \newcommand\todo[1]{\textcolor{red}{#1}}
 
-\newcommand\sign[1]{{\rmfamily\textbf{\emph{#1}}}}
+\newcommand\sign[1]{{\stfs\rmfamily\textbf{\emph{#1}}}}
 \newcommand\refrain{\sign{Refrain}}
 \newcommand\solo{\sign{Solo}}
 \newcommand\fine{\sign{fine}}
@@ -363,37 +363,36 @@
 %
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lf{\hspace{0.3em}\lilyDynamics{f}}} % Lautstaerke Forte
+{\newcommand\lf{\stfs\hspace{0.3em}\lilyDynamics{f}\;}} % Lautstaerke Forte
 {\newcommand\lf{{\rmfamily\footnotesize \textbf{\emph{f}}}}} % Lautstaerke Forte
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lff{\hspace{0.3em}\lilyDynamics{ff}}} % Lautstaerke Forte Fortissimus
+{\newcommand\lff{\stfs\hspace{0.3em}\lilyDynamics{ff}\;}} % Lautstaerke Forte Fortissimus
 {\newcommand\lff{{\rmfamily\footnotesize \textbf{\emph{ff}}}}} % Lautstaerke Forte Fortissimus
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lmf{\hspace{0.3em}\lilyDynamics{mf}}} % Lautstaerke Mezzo Forte
+{\newcommand\lmf{\stfs\hspace{0.3em}\lilyDynamics{mf}\;}} % Lautstaerke Mezzo Forte
 {\newcommand\lmf{{\rmfamily\footnotesize \textbf{\emph{mf}}}}} % Lautstaerke Mezzo Forte
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lp{\hspace{0.3em}\lilyDynamics{p}}} % Lautstaerke Piano
+{\newcommand\lp{\stfs\hspace{0.3em}\lilyDynamics{p}\;}} % Lautstaerke Piano
 {\newcommand\lp{{\rmfamily\footnotesize \textbf{\emph{p}}}}} % Lautstaerke Piano
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lmp{\hspace{0.3em}\lilyDynamics{mp}}} % Lautstaerke Mezzo Piano
+{\newcommand\lmp{\stfs\hspace{0.3em}\lilyDynamics{mp}\;}} % Lautstaerke Mezzo Piano
 {\newcommand\lmp{{\rmfamily\footnotesize \textbf{\emph{mp}}}}} % Lautstaerke Mezzo Piano
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lpp{\hspace{0.3em}\lilyDynamics{pp}}} % Lautstaerke Piano Pianissimo
+{\newcommand\lpp{\stfs\hspace{0.3em}\lilyDynamics{pp}\;}} % Lautstaerke Piano Pianissimo
 {\newcommand\lpp{{\rmfamily\footnotesize \textbf{\emph{pp}}}}} % Lautstaerke Piano Pianissimo
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lppp{\hspace{0.3em}\lilyDynamics{ppp}}} % Lautstaerke Piano Pianissimo
+{\newcommand\lppp{\stfs\hspace{0.3em}\lilyDynamics{ppp}\;}} % Lautstaerke Piano Pianissimo
 {\newcommand\lppp{{\rmfamily\footnotesize \textbf{\emph{ppp}}}}} % Lautstaerke Piano Pianissimo
 
 %
 % Repeats
 %
-
 \newcommand\rdc{{\rmfamily\footnotesize \textbf{\emph{DC}}}} % Repeats Da Capo
 \newcommand\rds{{\rmfamily\footnotesize \textbf{\emph{DS}}}} % Repeats Dal Segno
 
@@ -508,15 +507,17 @@
 
 % TODO: \macron \wedge \sslash \divdot \dotdiv \dotminus \lessdot \varparallel \nntstile{abc}{def} \gtrdo \gtrdot
 
+\newcommand\leftright[3][]{%
+    \makebox[#2][l]{\textbf{#1}\hfill \textbf{#3}}%
+}
 
+\newcommand\first[2][]{%
+    \hspace{3pt}\uline{\leftright[\emph{1.}]{#2-3pt}{#1}}%
+}
 
-
-
-
-
-
-
-
+\newcommand\second[2][]{%
+    \hspace{3pt}\uline{\leftright[\emph{2.}]{#2-3pt}{#1}}%
+}
 
 \newenvironment{tonic-row}[2]
 {

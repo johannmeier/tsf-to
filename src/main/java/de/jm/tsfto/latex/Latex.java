@@ -18,6 +18,7 @@ public class Latex {
         prefixToLatex.put(";", "a");
         prefixToLatex.put(":", "n");
         prefixToLatex.put(".,", "hq");
+       prefixToLatex.put(",,", "hhq");
         prefixToLatex.put("//", "tt");
         prefixToLatex.put(".", "h");
         prefixToLatex.put(",", "q");
@@ -35,6 +36,7 @@ public class Latex {
         prefixToPlainLatex.put(";", "\\as");
         prefixToPlainLatex.put(":", "\\ns");
         prefixToPlainLatex.put(".,", "\\hfill\\hs&\\qs");
+        prefixToPlainLatex.put(",,", "\\hs\\qs");
         prefixToPlainLatex.put("//", "\\tts");
         prefixToPlainLatex.put(".", "\\hs");
         prefixToPlainLatex.put(",", "\\qs");

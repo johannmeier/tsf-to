@@ -1,14 +1,15 @@
-
+bottom:0.5cm
 c: small:
 
-
-c: latex: \footnotesize
+sql: 0.89cm
+!m+  .l :m
+!l  .l :m
 
 sql: 1.12cm
-s: key:D
-!d   .r~ :m^  .s. ;- :- !s~.  :- .s>  ;- :- ! :t  :- ;l  !s  :f     ;m   :r   !!
+s: key:D,_bpm:70****
+!d   .-/ :m^  .s. ;- :-//  !s~.  :- .s>  ;- :- ! :t  :- ;l  !s  :f     ;m   :r/   !!
 !Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh _oh*    oh   oh! !!
-!d   .r :m   .s   ;- :- !f  :- .f>   ;- :- ! :s  :- ;f  !m  :r     ;d   :t,  !!
+!d   .r :m   .s   ;- :- !f  :- .f    ;- :- ! :s  :- ;f  !m  :r     ;d   :t,//  !!
 !d   .r :m   .s   ;- :- !t  :- .t   ;- :- ! :r' :- ;d' !d' :-     ;l   :-   !!
 !Have_a_nice_day,*****  !doo   *doo, *  * !  oh  *  oh !oh  *  *   oh!  *   !!
 !d   .r :m   .s   ;- :- !s  :- .s   ;- :- ! :s, :- ;s, !s, :- .s, ;l,  :t,  !!
@@ -21,4 +22,9 @@ s: p:A
 !d'     :-   .d'  ;- .d' :d'   !l_3 :s   ;-    :s    !la  :- .la ;- :la !s  :-     ;-     :-
 !Dum.**      _Have*   a   nice !day, *    *     oh   !oh     *oh  *  oh !oh,   *be    *dum dum
 !d      :-   .d   ;- .d  :d    !d   :-   ;-    :m    !f   :- .f  ;- :f  !s  :- .s, ;- .l, :t,
+
+verse: 2. Das er-ste tun uns ma-chen, das er-ste tun uns ma-chen die In-stru-
+men-te gut, die In-stru-ment-te gut,
+wel-che zu die-sen Sa-chen, wel- che zu die-sen Sa-chen die Kunst be-
+rei-ten tut, die Kunst be-rei-ten tut.
 

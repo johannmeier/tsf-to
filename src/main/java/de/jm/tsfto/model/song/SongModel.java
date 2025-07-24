@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static de.jm.tsfto.model.song.KeyValueLine.getValue;
 
@@ -15,11 +17,12 @@ public class SongModel {
 
     private static final String beginDocument = """
             \\documentclass[a4paper, 12pt]{article}
-            \\usepackage[left=1.3cm, right=1.3cm, top=1.3cm, bottom=1.3cm]{geometry}
+            \\usepackage[left=%s, right=%s, top=%s, bottom=%s]{geometry}
             \\usepackage{song}
             \\begin{document}
             """;
     private static final String endDocument = "\\end{document}";
+    private static final Map<String, String> keyValuePairs = new HashMap<>();
 
     private final List<Object> songLines;
 
@@ -59,7 +62,9 @@ public class SongModel {
             if (VerseLine.matches(line) || !verseLines.isEmpty()) {
                 verseLines.add(VerseLine.of(line));
             } else if (KeyValueLine.matches(line)) {
-                songLines.add(new KeyValueLine(line));
+                KeyValueLine kLine = new KeyValueLine(line);
+                songLines.add(kLine);
+                keyValuePairs.put(kLine.getKey(), kLine.getValue());
             } else if (ColsLine.matches(line)) {
                 scoreLines.add(new ColsLine(line));
             } else if (SymbolLine.matches(line)) {
@@ -76,6 +81,9 @@ public class SongModel {
         if (!scoreLines.isEmpty()) {
             songLines.add(ScorePart.of(scoreLines));
         }
+        if (!verseLines.isEmpty()) {
+            songLines.add(VersePart.of(verseLines));
+        }
 
         return new SongModel(songLines);
     }
@@ -86,7 +94,7 @@ public class SongModel {
 
     public String toLatex() {
         StringBuilder latexBuilder = new StringBuilder();
-        latexBuilder.append(beginDocument).append("\n");
+        latexBuilder.append(beginDocument.formatted(getLeft(), getRight(), getTop(), getBottom())).append("\n");
         for (Object object : getSongLines()) {
             if (object instanceof VersePart versePart) {
                 latexBuilder.append(versePart.toLatex()).append('\n');
@@ -101,5 +109,18 @@ public class SongModel {
         }
         latexBuilder.append(endDocument).append("\n");
         return latexBuilder.toString();
+    }
+
+    private String getTop() {
+        return keyValuePairs.getOrDefault("top", "1.3cm");
+    }
+    private String getBottom() {
+        return keyValuePairs.getOrDefault("bottom", "1.3cm");
+    }
+    private String getLeft() {
+        return keyValuePairs.getOrDefault("left", "1.3cm");
+    }
+    private String getRight() {
+        return keyValuePairs.getOrDefault("right", "1.3cm");
     }
 }

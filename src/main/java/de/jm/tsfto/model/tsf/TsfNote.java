@@ -162,6 +162,9 @@ public class TsfNote {
         return postfix.contains("+");
     }
 
+    public boolean isHalfHalfQuarter() {
+        return prefix.startsWith(",,");
+    }
 
     public boolean isUnderline() {
         return postfix.contains("_");

@@ -221,6 +221,8 @@ public class ScorePart {
             int noteColCount = 1;
             for (int i = 0; i < cols.length(); i++) {
                 char c = cols.charAt(i);
+                TsfNote nextNote = (notePos + 1 < notes.size()) ? notes.get(notePos + 1) : null;
+                TsfNote previousNote = (notePos -1 >=  0) ? notes.get(notePos - 1) : null;
 
                 if (colTime < noteTime) {
                     if (noteColCount == 1) {
@@ -232,18 +234,22 @@ public class ScorePart {
                     note = notes.get(notePos++);
                     noteColCount = note.getColCount();
                     if (note.isTwoNotesOneColumn()) {
-                        TsfNote nextNote = notes.get(notePos++);
-                        latexBuilder.append(Latex.twoNotesMultiColumnToLatex(note, nextNote));
-                        noteTime += lengthToInt.get(nextNote.getLength());
+                        latexBuilder.append(Latex.twoNotesMultiColumnToLatex(note, nextNote)).append("&");
                     } else if (note.isStack()) {
                         TsfNote secondNote = TsfTokenParser.getPlainNote(note.getSecondNote());
                         String space = "1px";
                         latexBuilder.append(Latex.prefixToPlainLatex.get(note.getPrefix()));
                         latexBuilder.append("\\lstack[%s]{%s}{%s}&".formatted(space, Latex.getPlainNoteLatex(note), Latex.getPlainNoteLatex(secondNote)));
                     } else {
-                        latexBuilder.append(Latex.tsfNoteToLatex(note)).append("&");
+                        if (previousNote == null || !previousNote.isTwoNotesOneColumn()) {
+                            latexBuilder.append(Latex.tsfNoteToLatex(note)).append((note.getLength() == TsfNote.Length.HALF_QUARTER && nextNote != null && !nextNote.isHalfHalfQuarter()) ? "" : "&");
+                        }
                     }
-                    noteTime += lengthToInt.get(note.getLength());
+                    if (note.isHalfHalfQuarter() || (nextNote != null && nextNote.isHalfHalfQuarter())) {
+                        noteTime += lengthToInt.get(TsfNote.Length.HALF);
+                    } else {
+                        noteTime += lengthToInt.get(note.getLength());
+                    }
                 }
 
                 colTime += colToInt.get(c);
@@ -272,8 +278,15 @@ public class ScorePart {
     static String getCols(NoteLine noteLine) {
         StringBuilder cols = new StringBuilder();
 
-        for (TsfNote note : noteLine.getTsfNotes()) {
-            cols.append(lengthToCol.get(note.getLength()));
+        List<TsfNote> notes = noteLine.getTsfNotes();
+        for (int i = 0; i < notes.size(); i++) {
+            TsfNote note = notes.get(i);
+            TsfNote nextNote = (i + 1 == notes.size()) ? null : notes.get(i + 1);
+            if (note.isHalfHalfQuarter() || (nextNote != null && nextNote.isHalfHalfQuarter())) {
+                cols.append(lengthToCol.get(TsfNote.Length.HALF));
+            } else {
+                cols.append(lengthToCol.get(note.getLength()));
+            }
         }
 
         return cols.toString();
@@ -301,7 +314,8 @@ public class ScorePart {
     private boolean hasVoice() {
         for (SongLine songLine : songLines) {
             if (songLine instanceof NoteLine noteLine) {
-                if (noteLine.getVoice() != null) {
+                String voice = noteLine.getVoice();
+                if (voice != null && Character.isUpperCase(voice.charAt(0))) {
                     return true;
                 }
             }

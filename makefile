@@ -1,4 +1,3 @@
-#TSF = $(shell ls tsf)
 TSF = $(notdir $(wildcard tsf/*.tsf))
 
 PDF = $(TSF:%.tsf=%.pdf)

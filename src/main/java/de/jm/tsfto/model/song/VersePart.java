@@ -23,12 +23,14 @@ public class VersePart {
         StringBuilder currentVerse = new StringBuilder();
         List<String> verses = new ArrayList<>();
         for (VerseLine verseLine : songLines) {
+            if (!currentVerse.isEmpty()) {
+                currentVerse.append(latexRowEndNewline);
+            }
             if (verseLine.isStartLine() && !currentVerse.isEmpty()) {
                 verses.add(currentVerse.toString());
                 currentVerse.setLength(0);
             }
-
-            currentVerse.append(verseLine.toLatex()).append(latexRowEndNewline);
+            currentVerse.append(verseLine.toLatex());
         }
 
         if (!currentVerse.isEmpty()) {

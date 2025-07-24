@@ -40,12 +40,21 @@ public class KeyValueLine extends SongLine {
 
     @Override
     public String toLatex() {
-        String key = getKey();
-        if (keyToLatex.containsKey(key)) {
-            return String.format(keyToLatex.get(key), getValue());
+        if (isSystemProperty()) {
+            return "";
         } else {
-            throw new InvalidKeyRuntimeException("Unknown key: " + key);
+            String key = getKey();
+            if (keyToLatex.containsKey(key)) {
+                return String.format(keyToLatex.get(key), getValue());
+            } else {
+                throw new InvalidKeyRuntimeException("Unknown key: " + key);
+            }
         }
+    }
+
+    private boolean isSystemProperty() {
+        String systemProperties = "top,bottom,right,left";
+        return systemProperties.contains(getKey());
     }
 
     public String getKey() {

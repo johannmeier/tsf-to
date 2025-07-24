@@ -43,6 +43,9 @@ class SymbolLineTest {
     void fillSymbols() {
         assertEquals("\\mnbr{50}", SymbolLine.fillSymbols("b:50"));
         assertEquals("\\tpart{A}", SymbolLine.fillSymbols("p:A"));
+        assertEquals("\\first{\\flc*\\real{4}}", SymbolLine.fillSymbols("1.4"));
+        assertEquals("\\first[\\rdc]{\\flc*\\real{4}}", SymbolLine.fillSymbols("1.4_dc"));
+        assertEquals("\\first[\\rds]{\\flc*\\real{4}}", SymbolLine.fillSymbols("1.4_ds"));
     }
 
     @Test
