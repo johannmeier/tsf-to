@@ -52,15 +52,15 @@ class SymbolLineTest {
     void toLatex() {
         assertEquals("&&&", new SymbolLine("* * *").toLatex());
         assertEquals("\\tpart{A}&&\\sign{hello}&", new SymbolLine("p:A * hello").toLatex());
-        assertEquals("\\tpart{A} \\fer&", new SymbolLine("p:A_^").toLatex());
+        assertEquals("\\tpart{A}\\ \\fer&", new SymbolLine("p:A_^").toLatex());
         assertEquals("\\hfill\\coda&", new SymbolLine(">$").toLatex());
         assertEquals("", new SymbolLine("").toLatex());
         assertEquals("&", new SymbolLine("*").toLatex());
         assertEquals("&&", new SymbolLine("**").toLatex());
         assertEquals("\\multicolumn{2}{R}{\\coda}&", new SymbolLine("*$").toLatex());
         assertEquals("\\multicolumn{2}{L}{\\coda}&", new SymbolLine("$*").toLatex());
-        assertEquals("\\multicolumn{3}{L}{\\coda \\DC}&", new SymbolLine("$*DC").toLatex());
-        assertEquals("\\multicolumn{3}{L}{\\coda \\hfill\\DC}&", new SymbolLine("$*>DC").toLatex());
+        assertEquals("\\multicolumn{3}{L}{\\coda\\ \\DC}&", new SymbolLine("$*DC").toLatex());
+        assertEquals("\\multicolumn{3}{L}{\\coda\\ \\hfill\\DC}&", new SymbolLine("$*>DC").toLatex());
         assertEquals("&\\fer&", new SymbolLine("* ^").toLatex());
         assertEquals("&&\\fer&", new SymbolLine("** ^").toLatex());
         assertEquals("&\\multicolumn{2}{R}{\\DC}&", new SymbolLine("* *DC").toLatex());
@@ -98,4 +98,11 @@ class SymbolLineTest {
         assertEquals("* *", SymbolLine.processMultiCols("* *"));
     }
 
+    @Test
+    void replaceWedges() {
+        assertEquals("\\crescWedge{\\flc*1}", SymbolLine.replaceWedges("<"));
+        assertEquals("\\crescWedge{\\flc*4}", SymbolLine.replaceWedges("<4"));
+        assertEquals("\\crescWedge{\\flc*1.5}a\\decrescWedge{\\flc*2}", SymbolLine.replaceWedges("<1.5a>2"));
+        assertEquals("left>right", SymbolLine.replaceWedges("left>right"));
+    }
 }

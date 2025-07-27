@@ -136,6 +136,7 @@ public class ScorePart {
         if (hasVoice()) {
             cols = "l" + cols;
         }
+        boolean writeBarCount = true;
 
         for (int i = 0; i < songLines.size(); i++) {
             StringBuilder latexLine = new StringBuilder();
@@ -145,8 +146,9 @@ public class ScorePart {
 
             SongLine songLine = songLines.get(i);
             if (songLine instanceof SymbolLine symbolLine) {
-                if (countScorePart % 2 == 0 && (i + 1) < songLines.size() && songLines.get(i + 1) instanceof NoteLine) {
+                if (writeBarCount && countScorePart % 2 == 0 && (i + 1) < songLines.size() && songLines.get(i + 1) instanceof NoteLine) {
                     latexLine.append("\\mnbr{%s}\\ ".formatted(barCount));
+                    writeBarCount = false;
                 }
                 latexLine.append("&").append(symbolLine.toLatex()).append(latexRowEndNewline);
             }
@@ -315,7 +317,7 @@ public class ScorePart {
         for (SongLine songLine : songLines) {
             if (songLine instanceof NoteLine noteLine) {
                 String voice = noteLine.getVoice();
-                if (voice != null && Character.isUpperCase(voice.charAt(0))) {
+                if (voice != null && !voice.isEmpty() && Character.isUpperCase(voice.charAt(0))) {
                     return true;
                 }
             }

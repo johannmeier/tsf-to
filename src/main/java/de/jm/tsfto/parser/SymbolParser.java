@@ -8,7 +8,7 @@ public class SymbolParser {
     private final String symbolsToken;
     private int pos;
 
-    private SymbolParser(String symbolsToken) {
+    SymbolParser(String symbolsToken) {
         this.symbolsToken = symbolsToken;
     }
 
@@ -18,50 +18,55 @@ public class SymbolParser {
 
     private List<String> parse() {
         List<String> tokens = new ArrayList<>();
-
-        StringBuilder token = new StringBuilder();
-        for (pos = 0; pos < symbolsToken.length(); pos++) {
-            String current = current();
-
-            if (isSingleToken(current)) {
-                tokens.add(current);
-                continue;
-            }
-
-            token.append(current);
-
-            String next = next();
-
-            if (next == null) {
-                tokens.add(token.toString());
-            }
-
-            if (isSingleToken(next)) {
-                tokens.add(token.toString());
-                token.setLength(0);
-
-                tokens.add(next);
-                pos++;
-            }
+        while (hasNext()) {
+            tokens.add(nextToken());
         }
-
         return tokens;
     }
 
-    private boolean isSingleToken(String next) {
-        String startTokens = "_>$^%*";
-        return next != null && startTokens.contains(next);
+    private static boolean isSingleToken(Character c) {
+        String startTokens = "_$^%*";
+        return c != null && startTokens.contains("" + c);
     }
 
-    String current() {
-        return String.valueOf(symbolsToken.charAt(pos));
+    private static boolean isTokenStart(Character c) {
+        return c != null && (isSingleToken(c) || c == '>' || c == '<');
     }
 
-    String next() {
-        if (pos + 1 < symbolsToken.length()) {
-            return String.valueOf(symbolsToken.charAt(pos + 1));
-        } else {
-            return null;
+    boolean hasNext() {
+        return pos < symbolsToken.length();
+    }
+
+    String nextToken() {
+        Character current = currentChar();
+        pos++;
+        StringBuilder token = new StringBuilder();
+        token.append(current);
+
+        if (isSingleToken(current)) {
+            return token.toString();
         }
+
+        if (current == '>' || current == '<') {
+            if (currentChar() == null || !Character.isDigit(currentChar())) {
+                return token.toString();
+            }
+        }
+
+        while ((current = currentChar()) != null) {
+            if (isTokenStart(current)) {
+                break;
+            }
+            token.append(current);
+            pos++;
+        }
+        return token.toString();
+    }
+
+    Character currentChar() {
+        if (pos < symbolsToken.length()) {
+            return symbolsToken.charAt(pos);
+        }
+        return null;
     }
 }

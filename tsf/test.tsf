@@ -1,6 +1,15 @@
 bottom:0.5cm
 c: small:
 
+sql: 1.00cm
+
+s: _>1><1**
+!m :m :f  !s :- :s !s  :- .f :m      !r  :- :r  !m .,f :s .l :f
+!s :s :f  !m :- :m !m  :- .r :s      !t, :- :t, !d     :d    :t,
+!d :d :l, !d :- :d !d, :r,   :m, .f, !l, :- :l, !l,    :d,   :s,
+!s :m :r  !s :- :s !s  :s    :d      !r  :- :r  !      :d    :r
+!d :d :r  !d :- :d !d  :t,   :d      !s, :- :s, !d .,r :m .f :r
+
 sql: 0.89cm
 !m+  .l :m
 !l  .l :m

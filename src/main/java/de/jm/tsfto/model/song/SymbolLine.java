@@ -40,7 +40,7 @@ public class SymbolLine extends SongLine {
         symbolToLatex.put("mp", "\\lmp");
 
         symbolToLatex.put(">", "\\hfill");
-        symbolToLatex.put("_", " ");
+        symbolToLatex.put("_", "\\ ");
         symbolToLatex.put("*", "&");
         symbolToLatex.put("!", "\\ms");
         symbolToLatex.put("|", "\\ms");
@@ -128,8 +128,9 @@ public class SymbolLine extends SongLine {
             latexBuilder.append("{\\flc*\\real{%s}}".formatted(length));
             return latexBuilder.toString();
         }
-        List<String> parts = SymbolParser.parse(token);
-        for (String part : parts) {
+
+        List<String> tokenParts = SymbolParser.parse(token);
+        for (String part : tokenParts) {
             if (symbolToLatex.containsKey(part)) {
                 latexBuilder.append(symbolToLatex.get(part));
             } else {
@@ -143,6 +144,9 @@ public class SymbolLine extends SongLine {
                         }
                         latexBuilder.append(keyValueToLatex.get(key).formatted(value));
                     }
+                } else if (part.charAt(0) == '<' || part.charAt(0) == '>') {
+                    String latex = replaceWedges(part);
+                    latexBuilder.append(latex.replace(">" , "\\hfill "));
                 } else {
                     latexBuilder.append("\\sign{%s}".formatted(part));
                 }
@@ -199,5 +203,23 @@ public class SymbolLine extends SongLine {
 
     public static boolean matches(String line) {
         return line.startsWith("s:");
+    }
+
+    static String replaceWedges(String token) {
+        Pattern pattern = Pattern.compile("[><]\\d+\\.*\\d*");
+        Map<Character, String> wedgesToLatex = Map.of('>', "\\\\decrescWedge{\\\\flc*%s}", '<', "\\\\crescWedge{\\\\flc*%s}");
+
+        while (true) {
+            Matcher matcher = pattern.matcher(token);
+            if (matcher.find()) {
+                String group = matcher.group();
+                token = matcher.replaceFirst(wedgesToLatex.get(group.charAt(0)).formatted(group.substring(1)));
+            } else {
+                break;
+            }
+        }
+
+        token = token.replaceFirst("<$", wedgesToLatex.get('<').formatted("1"));
+        return token.replaceFirst(">$", wedgesToLatex.get('>').formatted("1"));
     }
 }

@@ -33,4 +33,17 @@ class SymbolParserTest {
         assertEquals("*", tokens.get(1));
     }
 
+    @Test
+    void nextToken() {
+        SymbolParser parser;
+        parser = new SymbolParser(">");
+        assertEquals(">", parser.nextToken());
+
+        parser = new SymbolParser(">2.0");
+        assertEquals(">2.0", parser.nextToken());
+
+        parser = new SymbolParser(">left");
+        assertEquals(">", parser.nextToken());
+        assertEquals("left", parser.nextToken());
+    }
 }

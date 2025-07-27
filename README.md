@@ -28,26 +28,27 @@
 * If a ~ is contained in a TextLine it will be treated as a symbol line.
 * Following symbols are recognized:
 
-| sign | meaning |
-|------|-------- |
-| ^    | fermata sign |
-| %    | segno sign |
-| $    | coda sign |
-| DS   | dal segno |
-| DC   | da capo |
-| 1.   | first repeat |
-| 2.   | second repeat |
-| f    | forte |
-| mf   | mezzo forte |
-| ff   | forte fortissimum |
-| p    | piano |
-| pp   | piano pianissimum |
-| ppp  | ppp |
-| \>   | filler (right>left*7 box 7 columns 'right' right aligned and 'left' left aligned) |
-| _    | space |
-| *    | empty column |
-| b:int | Bar number |
-| p:int | Song Part, e.g. A,B,C |
+| sign      | meaning                                                                           |
+|-----------|-----------------------------------------------------------------------------------|
+| ^         | fermata sign                                                                      |
+| %         | segno sign                                                                        |
+| $         | coda sign                                                                         |
+| ds        | dal segno                                                                         |
+| ds        | da capo                                                                           |
+| 1.        | first repeat                                                                      |
+| 2.        | second repeat                                                                     |
+| f         | forte                                                                             |
+| mf        | mezzo forte                                                                       |
+| ff        | forte fortissimum                                                                 |
+| p         | piano                                                                             |
+| pp        | piano pianissimum                                                                 |
+| ppp       | ppp                                                                               |
+| \>        | filler (right>left*7 box 7 columns 'right' right aligned and 'left' left aligned) |
+| _         | space                                                                             |
+| *         | empty column                                                                      |
+| b:int     | Bar number                                                                        |
+| p:int     | Song Part, e.g. A,B,C                                                             |
+| bpm:int   | Pulse                                                                             |
 
 ## Text lines
 
@@ -68,6 +69,3 @@ Add verse numbers to text lines:
     * :d
     1. hello
     2. hello
-
-
-
