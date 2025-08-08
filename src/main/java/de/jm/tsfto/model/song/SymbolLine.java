@@ -54,7 +54,7 @@ public class SymbolLine extends SongLine {
         keyValueToLatex.put("b:", "\\mnbr{%s}");
         keyValueToLatex.put("p:", "\\tpart{%s}");
         keyValueToLatex.put("key:", "\\key{%s}");
-        keyValueToLatex.put("bpm:", "\\sign{P=%s}");
+        keyValueToLatex.put("bpm:", "\\sign{M=%s}");
     }
 
 
