@@ -135,6 +135,7 @@
 \newcommand\nlu[2][1]{\ns \ul{\lo{#2}}{\flc*\real{#1}}} % Normal Low Underline
 \newcommand\nlp[2][1]{\ns \up{\lo{#2}}{\flc*\real{#1}}} % Normal Low underPoint
 \newcommand\dnn[1]{\multicolumn{2}{L}{\ns #1}} % Double Normal Normal
+\newcommand\dnnu[2][1]{\multicolumn{2}{L}{\ns \ul{#2}{\flc*\real{#1}}}} % Double Normal Normal Underline
 \newcommand\dnh[1]{\multicolumn{2}{L}{\ns\hi{#1}}} % Double Normal High
 \newcommand\dnl[1]{\multicolumn{2}{L}{\ns\lo{#1}}} % Double Normal Low
 \newcommand\tnn[1]{\multicolumn{t}{L}{\ns #1}} % Triple Normal Normal
@@ -225,6 +226,7 @@
 \newcommand\dtn[1]{\multicolumn{2}{L}{\ts #1}} % Double third Note
 \newcommand\dth[1]{\multicolumn{2}{L}{\ts \hi{#1}}} % Double third High
 \newcommand\dtl[1]{\multicolumn{2}{L}{\ts \lo{#1}}} % Double third Low
+
 
 \newcommand\ttn[1]{\hfill\ts&\ts #1} % Third Third Normal
 \newcommand\tth[1]{\hfill\ts&\ts \hi{#1}} % Third Third High
@@ -327,16 +329,17 @@
 \newcommand\dnc{\ns\cs&} % Double Normal Continue
 
 \newcommand\hc{\hs\cs} % Half Continue
-\newcommand\hcu[2][1]{\hs \ul{\cs}{\flc*\real{#1}}} % Third High Underline
-\newcommand\hcp[2][1]{\hs \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+\newcommand\hcu[2][1]{\hs \ul{\cs}{\flc*\real{#1}}} % Third Continue Underline
+\newcommand\hcp[2][1]{\hs \up{\cs}{\flc*\real{#1}}} % Third Continue underPoint
 
 \newcommand\tc{\ts\cs} % Third Continue
-\newcommand\tcu[2][1]{\ts \ul{\cs}{\flc*\real{#1}}} % Third High Underline
-\newcommand\tcp[2][1]{\ts \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+\newcommand\tcu[2][1]{\ts \ul{\cs}{\flc*\real{#1}}} % Third Continue Underline
+\newcommand\tcp[2][1]{\ts \up{\cs}{\flc*\real{#1}}} % Third Continue underPoint
+\newcommand\dtc{\ts\cs&} % Double Third Continue
 
 \newcommand\qc{\qs\cs} % Quarter Continue
-\newcommand\qcu[2][1]{\qs \ul{\cs}{\flc*\real{#1}}} % Third High Underline
-\newcommand\qcp[2][1]{\qs \up{\cs}{\flc*\real{#1}}} % Third High underPoint
+\newcommand\qcu[2][1]{\qs \ul{\cs}{\flc*\real{#1}}} % Third Continue Underline
+\newcommand\qcp[2][1]{\qs \up{\cs}{\flc*\real{#1}}} % Third Continue underPoint
 
 \newcommand\dc{\ds\cs&} % Double Measure Continue
 

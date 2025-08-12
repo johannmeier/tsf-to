@@ -21,7 +21,9 @@ class ScorePartTest {
 
     @Test
     void getBarCount() {
+        assertEquals(2, ScorePart.of(List.of(NoteLine.of(":d !d :r :m !d"))).getBarCount());
         assertEquals(2, ScorePart.of(List.of(NoteLine.of("!d :r :m !d"))).getBarCount());
+        assertEquals(2, ScorePart.of(List.of(NoteLine.of("!d :r :m !! :s"))).getBarCount());
         assertEquals(1, ScorePart.of(List.of(NoteLine.of("!d :r :m !!"))).getBarCount());
     }
 

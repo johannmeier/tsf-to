@@ -159,7 +159,8 @@ public class ScorePart {
                 }
                 if (firstBracketLine) {
                     if (countScorePart % 2 == 0 && (i == 0 || !(songLines.get(i - 1) instanceof SymbolLine))) {
-                        latexBuilder.append("&\\mnbr{%s}\\ ".formatted(barCount)).append(latexRowEndNewline);
+                        latexBuilder.append("\\mnbr{%s}\\ &".formatted(barCount)).append(latexRowEndNewline);
+                        writeBarCount = false;
                     }
                     latexLine.append(leftBrace.formatted(countBracedLines))
                             .append(noteLineToLatex(noteLine, hasVoice() ? cols.substring(1) : cols, autoCols))
@@ -306,8 +307,13 @@ public class ScorePart {
     public long getBarCount() {
         for (SongLine songLine : songLines) {
             if (songLine instanceof NoteLine noteLine) {
-                String[] parts = noteLine.getLine().split("[!|]+");
-                return Arrays.stream(parts).filter(p -> !p.isEmpty()).count();
+                String line = noteLine.getLine();
+                String[] parts = line.split("[!|]+");
+                long count = Arrays.stream(parts).filter(p -> !p.isEmpty()).count();
+                if (line.charAt(0) != '!' && line.charAt(0) != '|') {
+                    count--;
+                }
+                return count;
             }
         }
         return 0;
