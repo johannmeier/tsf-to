@@ -134,11 +134,12 @@
 \newcommand\nl[2][1]{\ns\lo[#1]{#2}} % Note Low
 \newcommand\nlu[2][1]{\ns \ul{\lo{#2}}{\flc*\real{#1}}} % Normal Low Underline
 \newcommand\nlp[2][1]{\ns \up{\lo{#2}}{\flc*\real{#1}}} % Normal Low underPoint
-\newcommand\dnn[1]{\multicolumn{2}{L}{\ns #1}} % Double Normal Normal
-\newcommand\dnnu[2][1]{\multicolumn{2}{L}{\ns \ul{#2}{\flc*\real{#1}}}} % Double Normal Normal Underline
-\newcommand\dnh[1]{\multicolumn{2}{L}{\ns\hi{#1}}} % Double Normal High
-\newcommand\dnl[1]{\multicolumn{2}{L}{\ns\lo{#1}}} % Double Normal Low
-\newcommand\tnn[1]{\multicolumn{t}{L}{\ns #1}} % Triple Normal Normal
+
+\NewExpandableDocumentCommand\dnn{m}{\multicolumn{2}{L}{\ns #1}}
+\NewExpandableDocumentCommand\dnnu{O{1} m}{\multicolumn{2}{L}{\ns \ul{#2}{\flc*\real{#1}}}}
+\NewExpandableDocumentCommand\dnh{m}{\multicolumn{2}{L}{\ns \hi{#1}}}
+\NewExpandableDocumentCommand\dnl{m}{\multicolumn{2}{L}{\ns \lo{#1}}}
+\NewExpandableDocumentCommand\tnn{m}{\multicolumn{2}{L}{\ts #1}}
 
 \newcommand\an[1]{\as #1} % Accented Note
 \newcommand\anu[2][1]{\as \ul{#2}{\flc*\real{#1}}} % Accented Note Underline
@@ -223,9 +224,9 @@
 \newcommand\tl[2][1]{\ts \lo[#1]{#2}} % Third Note Low
 \newcommand\tlu[2][1]{\ts \ul{\lo{#2}}{\flc*\real{#1}}} % Third Low Underline
 \newcommand\tlp[2][1]{\ts \up{\lo{#2}}{\flc*\real{#1}}} % Third Low underPoint
-\newcommand\dtn[1]{\multicolumn{2}{L}{\ts #1}} % Double third Note
-\newcommand\dth[1]{\multicolumn{2}{L}{\ts \hi{#1}}} % Double third High
-\newcommand\dtl[1]{\multicolumn{2}{L}{\ts \lo{#1}}} % Double third Low
+\NewExpandableDocumentCommand\dtn{m}{\multicolumn{2}{L}{\ts #1}}
+\NewExpandableDocumentCommand\dth{m}{\multicolumn{2}{L}{\ts \hi{#1}}}
+\NewExpandableDocumentCommand\dtl{m}{\multicolumn{2}{L}{\ts \lo{#1}}}
 
 
 \newcommand\ttn[1]{\hfill\ts&\ts #1} % Third Third Normal
