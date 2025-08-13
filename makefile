@@ -14,6 +14,6 @@ clean:
 	java -cp target/classes de.jm.tsfto.TsfToApplication $< $@
 
 
-%.pdf: %.tex
+%.pdf: %.tex tonic-solfa.sty
 	echo $(PDF)
 	latexmk $<

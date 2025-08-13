@@ -125,7 +125,7 @@ public class SymbolLine extends SongLine {
                 String part2 = tokenParts[1];
                 latexBuilder.append("[%s]".formatted(symbolToLatex.getOrDefault(part2, part2)));
             }
-            latexBuilder.append("{\\flc*\\real{%s}}".formatted(length));
+            latexBuilder.append("{%s}".formatted(length));
             return latexBuilder.toString();
         }
 

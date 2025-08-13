@@ -528,12 +528,12 @@
     \makebox[#2][l]{\textbf{#1}\hfill \textbf{#3}}%
 }
 
-\newcommand\first[2][]{%
-    \hspace{5pt}\uline{\leftright[\emph{1.}]{#2-3pt}{#1}}%
+\NewExpandableDocumentCommand\first{O{} m}{%
+    \multicolumn{#2}{L}{\ \uline{\textbf{\emph{1.}}\hfill{#1}}\ }%
 }
 
-\newcommand\second[2][]{%
-    \hspace{3pt}\uline{\leftright[\emph{2.}]{#2-3pt}{#1}}%
+\NewExpandableDocumentCommand\second{O{} m}{%
+    \multicolumn{#2}{L}{\ \uline{\textbf{\emph{2.}}\hfill{#1}}\ }%
 }
 
 \newenvironment{tonic-row}[2]
