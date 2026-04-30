@@ -75,7 +75,7 @@ public class KeyValueLine extends SongLine {
     }
 
     public static boolean isKeyValue(String token) {
-        return token.matches("^[a-zA-Z]+:.*") & token.length() > 2;
+        return token.matches("^[a-zA-Z]+:.*") && token.length() > 2;
     }
 
     public static String getValue(String line) {

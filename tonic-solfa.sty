@@ -58,11 +58,11 @@
 \newcommand\flc{\the\flength} % Full Length Column
 
 \newlength{\toniclen}
-\newlength{\textlenght}
+\newlength{\textlength}
 
 \newcommand\calclen[2]{%
-\settowidth\textlenght{#1}%
-\setlength\toniclen{#2 - \textlenght}%
+\settowidth\textlength{#1}%
+\setlength\toniclen{#2 - \textlength}%
 }
 
 %
@@ -139,7 +139,7 @@
 \NewExpandableDocumentCommand\dnnu{O{1} m}{\multicolumn{2}{L}{\ns \ul{#2}{\flc*\real{#1}}}}
 \NewExpandableDocumentCommand\dnh{m}{\multicolumn{2}{L}{\ns \hi{#1}}}
 \NewExpandableDocumentCommand\dnl{m}{\multicolumn{2}{L}{\ns \lo{#1}}}
-\NewExpandableDocumentCommand\tnn{m}{\multicolumn{2}{L}{\ts #1}}
+\NewExpandableDocumentCommand\tnn{m}{\multicolumn{3}{L}{\ts #1}}
 
 \newcommand\an[1]{\as #1} % Accented Note
 \newcommand\anu[2][1]{\as \ul{#2}{\flc*\real{#1}}} % Accented Note Underline
@@ -387,7 +387,7 @@
 {\newcommand\lmp{{\rmfamily\footnotesize \textbf{\emph{mp}}}}} % Lautstaerke Mezzo Piano
 
 \IfFileExists{lilyglyphs.sty}
-{\newcommand\lpp{\stfs\hspace{0.3em}\lilyDynamics{pp}\;}} % Lautstaerke Piano Pianissimo
+{\newcommand\lpp{\stfs\hspace{0.3em}\raisebox{-.40em}{\lilyDynamics{pp}}\;}} % Lautstaerke Piano Pianissimo
 {\newcommand\lpp{{\rmfamily\footnotesize \textbf{\emph{pp}}}}} % Lautstaerke Piano Pianissimo
 
 \IfFileExists{lilyglyphs.sty}
