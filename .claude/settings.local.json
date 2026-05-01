@@ -11,7 +11,9 @@
       "Bash(java -jar target/tsf-to-1.0-SNAPSHOT.jar tsf/HaveANiceDay.tsf --musicxml)",
       "Bash(awk *)",
       "Bash(java -jar target/tsf-to-1.0-SNAPSHOT.jar tsf/HowDeepIsYourLove.tsf --musicxml)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(mvn *)",
+      "Bash(java *)"
     ]
   },
   "hooks": {

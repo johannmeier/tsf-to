@@ -122,8 +122,11 @@ public class MusicXmlWriter {
         appendPartList(sb, voices);
 
         int beatsPerMeasure = detectBeatsPerMeasure(songModel);
+        int bpm = parseBpm(meta.get("bpm"));
+        boolean firstVoice = true;
         for (VoiceData voice : voices) {
-            appendVoicePart(sb, voice, keyFifths, beatsPerMeasure);
+            appendVoicePart(sb, voice, keyFifths, beatsPerMeasure, firstVoice ? bpm : 0);
+            firstVoice = false;
         }
 
         sb.append("</score-partwise>\n");
@@ -133,22 +136,23 @@ public class MusicXmlWriter {
     // --- voice collection ---------------------------------------------------
 
     private List<VoiceData> collectVoices(SongModel songModel, int keyFifths) {
-        Map<String, List<List<NoteEntry>>> voiceMeasures = new LinkedHashMap<>();
+        Map<String, List<TsfNote>> voiceNotes = new LinkedHashMap<>();
 
         for (Object obj : songModel.getSongLines()) {
             if (!(obj instanceof ScorePart scorePart)) continue;
             for (NoteLine noteLine : getNoteLinesOf(scorePart)) {
-                String voice      = noteLine.getVoice();
-                int    baseOctave = baseOctaveForVoice(voice);
-                List<List<NoteEntry>> measures = buildMeasures(noteLine.getTsfNotes(), baseOctave, keyFifths);
-                voiceMeasures.computeIfAbsent(voice, k -> new ArrayList<>()).addAll(measures);
+                String voice = noteLine.getVoice();
+                voiceNotes.computeIfAbsent(voice, k -> new ArrayList<>()).addAll(noteLine.getTsfNotes());
             }
         }
 
         int partId = 1;
         List<VoiceData> result = new ArrayList<>();
-        for (Map.Entry<String, List<List<NoteEntry>>> e : voiceMeasures.entrySet()) {
-            result.add(new VoiceData(e.getKey(), partId++, e.getValue()));
+        for (Map.Entry<String, List<TsfNote>> e : voiceNotes.entrySet()) {
+            String voice      = e.getKey();
+            int    baseOctave = baseOctaveForVoice(voice);
+            List<List<NoteEntry>> measures = buildMeasures(e.getValue(), baseOctave, keyFifths);
+            result.add(new VoiceData(voice, partId++, measures));
         }
         return result;
     }
@@ -371,7 +375,7 @@ public class MusicXmlWriter {
     // --- parts --------------------------------------------------------------
 
     private void appendVoicePart(StringBuilder sb, VoiceData voice,
-                                  int keyFifths, int beatsPerMeasure) {
+                                  int keyFifths, int beatsPerMeasure, int bpm) {
         sb.append("  <part id=\"P").append(voice.partId()).append("\">\n");
 
         int     measureNumber = 1;
@@ -381,6 +385,7 @@ public class MusicXmlWriter {
             sb.append("    <measure number=\"").append(measureNumber++).append("\">\n");
             if (firstMeasure) {
                 appendAttributes(sb, keyFifths, voice.name(), beatsPerMeasure);
+                if (bpm > 0) appendTempo(sb, bpm);
                 firstMeasure = false;
             }
             for (NoteEntry entry : measure) appendNote(sb, entry);
@@ -388,6 +393,18 @@ public class MusicXmlWriter {
         }
 
         sb.append("  </part>\n");
+    }
+
+    private void appendTempo(StringBuilder sb, int bpm) {
+        sb.append("      <direction placement=\"above\">\n");
+        sb.append("        <direction-type>\n");
+        sb.append("          <metronome parentheses=\"no\">\n");
+        sb.append("            <beat-unit>quarter</beat-unit>\n");
+        sb.append("            <per-minute>").append(bpm).append("</per-minute>\n");
+        sb.append("          </metronome>\n");
+        sb.append("        </direction-type>\n");
+        sb.append("        <sound tempo=\"").append(bpm).append("\"/>\n");
+        sb.append("      </direction>\n");
     }
 
     // --- XML emission -------------------------------------------------------
@@ -575,6 +592,12 @@ public class MusicXmlWriter {
             case "Ab" -> -4; case "Db" -> -5; case "Gb" -> -6; case "Cb" -> -7;
             default   ->  0;
         };
+    }
+
+    private int parseBpm(String bpmStr) {
+        if (bpmStr == null) return 0;
+        try { return Integer.parseInt(bpmStr.trim()); }
+        catch (NumberFormatException e) { return 0; }
     }
 
     private String escapeXml(String text) {
