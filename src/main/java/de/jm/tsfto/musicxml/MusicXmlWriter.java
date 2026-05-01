@@ -6,6 +6,7 @@ import de.jm.tsfto.model.song.ScorePart;
 import de.jm.tsfto.model.song.SongModel;
 import de.jm.tsfto.model.tsf.TsfNote;
 import de.jm.tsfto.model.tsf.TsfNote.Accent;
+import de.jm.tsfto.parser.TsfTokenParser;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -90,8 +91,9 @@ public class MusicXmlWriter {
 
     private record Pitch(String step, int alter, int octave) {}
 
-    /** duration = MusicXML divisions; triplet = needs time-modification. */
-    private record NoteEntry(TsfNote note, Pitch pitch,
+    /** duration = MusicXML divisions; triplet = needs time-modification.
+     *  secondPitch is non-null for split-voice (%) notes. */
+    private record NoteEntry(TsfNote note, Pitch pitch, Pitch secondPitch,
                               boolean tieStart, boolean tieStop,
                               int duration, boolean triplet) {}
 
@@ -219,7 +221,16 @@ public class MusicXmlWriter {
                                              diatonicScale, tonicLetter, baseOctave);
                     lastPitch = pitch;
                 }
-                flat.add(new NoteEntry(note, pitch, false, false,
+                Pitch secondPitch = null;
+                if (note.isStack()) {
+                    String s = note.getSecondNote();
+                    if (!s.isEmpty()) {
+                        TsfNote sn = TsfTokenParser.getPlainNote(s);
+                        secondPitch = resolvePitch(sn.getNote(), sn.getOctave(),
+                                                   diatonicScale, tonicLetter, baseOctave);
+                    }
+                }
+                flat.add(new NoteEntry(note, pitch, secondPitch, false, false,
                                        durInfo.get(i)[0], durInfo.get(i)[1] == 1));
                 startsNew.add(i == 0 && newMeasure);
             }
@@ -231,7 +242,27 @@ public class MusicXmlWriter {
             NoteEntry e = flat.get(i);
             boolean tieStop  = e.note().isContinue();
             boolean tieStart = (i + 1 < flat.size()) && flat.get(i + 1).note().isContinue();
-            flat.set(i, new NoteEntry(e.note(), e.pitch(), tieStart, tieStop, e.duration(), e.triplet()));
+            flat.set(i, new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
+                                      tieStart, tieStop, e.duration(), e.triplet()));
+        }
+
+        // Phase 2.5: merge note + following continues into a single note when the combined
+        // duration is a standard value and no bar line lies in between.
+        for (int i = 0; i < flat.size(); i++) {
+            NoteEntry e = flat.get(i);
+            if (!e.tieStart() || e.note().isContinue()) continue;
+            while (i + 1 < flat.size()
+                    && flat.get(i + 1).note().isContinue()
+                    && !startsNew.get(i + 1)) {
+                int combined = e.duration() + flat.get(i + 1).duration();
+                if (!isValidDuration(combined)) break;
+                e = new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
+                                  flat.get(i + 1).tieStart(), e.tieStop(),
+                                  combined, e.triplet());
+                flat.set(i, e);
+                flat.remove(i + 1);
+                startsNew.remove(i + 1);
+            }
         }
 
         // Phase 3: split flat list into measures using boundary flags
@@ -485,6 +516,31 @@ public class MusicXmlWriter {
         }
 
         sb.append("      </note>\n");
+
+        if (entry.secondPitch() != null) {
+            Pitch sp = entry.secondPitch();
+            sb.append("      <note>\n");
+            sb.append("        <chord/>\n");
+            sb.append("        <pitch>\n");
+            sb.append("          <step>").append(sp.step()).append("</step>\n");
+            if (sp.alter() != 0)
+                sb.append("          <alter>").append(sp.alter()).append("</alter>\n");
+            sb.append("          <octave>").append(sp.octave()).append("</octave>\n");
+            sb.append("        </pitch>\n");
+            sb.append("        <duration>").append(entry.duration()).append("</duration>\n");
+            if (entry.tieStop())  sb.append("        <tie type=\"stop\"/>\n");
+            if (entry.tieStart()) sb.append("        <tie type=\"start\"/>\n");
+            sb.append("        <voice>1</voice>\n");
+            sb.append("        <type>").append(noteType(entry.duration(), entry.triplet())).append("</type>\n");
+            if (isDotted(entry.duration())) sb.append("        <dot/>\n");
+            if (entry.tieStop() || entry.tieStart()) {
+                sb.append("        <notations>\n");
+                if (entry.tieStop())  sb.append("          <tied type=\"stop\"/>\n");
+                if (entry.tieStart()) sb.append("          <tied type=\"start\"/>\n");
+                sb.append("        </notations>\n");
+            }
+            sb.append("      </note>\n");
+        }
     }
 
     // --- helpers ------------------------------------------------------------
@@ -547,21 +603,28 @@ public class MusicXmlWriter {
         if (triplet) return "eighth";  // triplet-eighth (dur=4)
         return switch (duration) {
             case 48 -> "whole";
+            case 36 -> "half";    // dotted half
             case 24 -> "half";
+            case 18 -> "quarter"; // dotted quarter
             case 12 -> "quarter";
-            case  9 -> "eighth";   // dotted-eighth
+            case  9 -> "eighth";  // dotted eighth
             case  6 -> "eighth";
             case  3 -> "16th";
             default -> "quarter";
         };
     }
 
-    /**
-     * Returns true when the duration corresponds to a dotted note value
-     * (i.e., 3/2 of a power-of-two note: 9 = dotted-eighth, 18 = dotted-quarter).
-     */
+    /** Returns true when the duration is a dotted note value (9, 18, or 36). */
     private boolean isDotted(int duration) {
-        return duration == 9 || duration == 18;
+        return duration == 9 || duration == 18 || duration == 36;
+    }
+
+    /** Returns true when the duration can be expressed as a single MusicXML note. */
+    private boolean isValidDuration(int duration) {
+        return switch (duration) {
+            case 3, 4, 6, 9, 12, 18, 24, 36, 48 -> true;
+            default -> false;
+        };
     }
 
     private int baseOctaveForVoice(String voice) {
