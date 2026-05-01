@@ -1,0 +1,584 @@
+package de.jm.tsfto.musicxml;
+
+import de.jm.tsfto.model.song.KeyValueLine;
+import de.jm.tsfto.model.song.NoteLine;
+import de.jm.tsfto.model.song.ScorePart;
+import de.jm.tsfto.model.song.SongModel;
+import de.jm.tsfto.model.tsf.TsfNote;
+import de.jm.tsfto.model.tsf.TsfNote.Accent;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Converts a TSF song to MusicXML partwise (one &lt;part&gt; per voice).
+ *
+ * <p>Beat/duration model (DIVISIONS = 12 per quarter note):
+ * <pre>
+ *   Quarter (12)
+ *   ├── first eighth  (pos  0–5): no length prefix
+ *   │   ├── first 16th  (pos 0, dur 3): no extra prefix
+ *   │   └── second 16th (pos 3, dur ?): , prefix
+ *   └── second eighth (pos  6–11): . prefix
+ *       ├── first 16th  (pos 6, dur 3): no extra prefix
+ *       └── second 16th (pos 9, dur ?): , prefix (after .)
+ *
+ *   Triplet eighths: / prefix → positions 0, 4, 8 (dur 4 each)
+ * </pre>
+ *
+ * <p>Time signature: number of beat separators (!, |, :, ;) per measure.
+ * Women's voices (S, A) → base octave 4; men's (T, B) → base octave 3.
+ */
+public class MusicXmlWriter {
+
+    /** MusicXML divisions per quarter note. 12 supports 8ths, 16ths, triplets. */
+    private static final int BEAT = 12;
+
+    private static final int TREBLE_BASE_OCTAVE = 4;
+    private static final int BASS_BASE_OCTAVE   = 3;
+
+    /** Letter names indexed 0=C … 6=B (scientific pitch notation). */
+    private static final String[] LETTER_NAMES = {"C", "D", "E", "F", "G", "A", "B"};
+
+    /**
+     * Tonic-Solfa degree table: each entry is {scale-degree (0=do…6=ti), alter-adjustment}.
+     * The alter-adjustment is applied on top of the key-signature alter for that degree.
+     */
+    private static final Map<String, int[]> TSF_DEGREE = new LinkedHashMap<>();
+    static {
+        TSF_DEGREE.put("da", new int[]{0, -1}); // lowered do
+        TSF_DEGREE.put("d",  new int[]{0,  0});
+        TSF_DEGREE.put("di", new int[]{0,  1}); // raised do
+        TSF_DEGREE.put("ra", new int[]{1, -1}); // lowered re
+        TSF_DEGREE.put("r",  new int[]{1,  0});
+        TSF_DEGREE.put("ri", new int[]{1,  1}); // raised re
+        TSF_DEGREE.put("ma", new int[]{2, -1}); // lowered mi (minor 3rd)
+        TSF_DEGREE.put("m",  new int[]{2,  0});
+        TSF_DEGREE.put("mi", new int[]{2,  1}); // raised mi
+        TSF_DEGREE.put("fa", new int[]{3, -1}); // lowered fa
+        TSF_DEGREE.put("f",  new int[]{3,  0});
+        TSF_DEGREE.put("fi", new int[]{3,  1}); // raised fa (tritone)
+        TSF_DEGREE.put("sa", new int[]{4, -1}); // lowered sol (tritone)
+        TSF_DEGREE.put("s",  new int[]{4,  0});
+        TSF_DEGREE.put("si", new int[]{4,  1}); // raised sol
+        TSF_DEGREE.put("la", new int[]{5, -1}); // lowered la (minor 6th)
+        TSF_DEGREE.put("l",  new int[]{5,  0});
+        TSF_DEGREE.put("li", new int[]{5,  1}); // raised la
+        TSF_DEGREE.put("ta", new int[]{6, -1}); // lowered ti (minor 7th)
+        TSF_DEGREE.put("ba", new int[]{6, -1}); // lowered ti (alternate)
+        TSF_DEGREE.put("t",  new int[]{6,  0});
+        TSF_DEGREE.put("ti", new int[]{6,  1}); // raised ti
+    }
+
+    /**
+     * Tonic letter index (0=C … 6=B) for key fifths −7…+7.
+     * Array index = fifths + 7.
+     * Pattern follows the circle of fifths: C G D A E B F# C# / F Bb Eb Ab Db Gb Cb.
+     */
+    private static final int[] TONIC_LETTER = {0, 4, 1, 5, 2, 6, 3, 0, 4, 1, 5, 2, 6, 3, 0};
+
+    /** Order in which sharps are added (F C G D A E B → letter indices 3 0 4 1 5 2 6). */
+    private static final int[] SHARP_ORDER = {3, 0, 4, 1, 5, 2, 6};
+    /** Order in which flats are added (B E A D G C F → letter indices 6 2 5 1 4 0 3). */
+    private static final int[] FLAT_ORDER  = {6, 2, 5, 1, 4, 0, 3};
+
+    private record Pitch(String step, int alter, int octave) {}
+
+    /** duration = MusicXML divisions; triplet = needs time-modification. */
+    private record NoteEntry(TsfNote note, Pitch pitch,
+                              boolean tieStart, boolean tieStop,
+                              int duration, boolean triplet) {}
+
+    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures) {}
+
+    // --- public API ---------------------------------------------------------
+
+    public void convert(Path tsfFile, Path xmlFile) throws IOException {
+        Files.writeString(xmlFile, toMusicXml(tsfFile));
+    }
+
+    public String toMusicXml(Path tsfFile) {
+        return toMusicXml(SongModel.parse(tsfFile.toString()));
+    }
+
+    public String toMusicXml(SongModel songModel) {
+        Map<String, String> meta   = extractMetadata(songModel);
+        int keyFifths              = getKeyFifths(meta.get("K"));
+        List<VoiceData>     voices = collectVoices(songModel, keyFifths);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        sb.append("<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 3.1 Partwise//EN\" ");
+        sb.append("\"http://www.musicxml.org/dtds/partwise.dtd\">\n");
+        sb.append("<score-partwise version=\"3.1\">\n");
+
+        appendHeader(sb, meta);
+        appendPartList(sb, voices);
+
+        int beatsPerMeasure = detectBeatsPerMeasure(songModel);
+        for (VoiceData voice : voices) {
+            appendVoicePart(sb, voice, keyFifths, beatsPerMeasure);
+        }
+
+        sb.append("</score-partwise>\n");
+        return sb.toString();
+    }
+
+    // --- voice collection ---------------------------------------------------
+
+    private List<VoiceData> collectVoices(SongModel songModel, int keyFifths) {
+        Map<String, List<List<NoteEntry>>> voiceMeasures = new LinkedHashMap<>();
+
+        for (Object obj : songModel.getSongLines()) {
+            if (!(obj instanceof ScorePart scorePart)) continue;
+            for (NoteLine noteLine : getNoteLinesOf(scorePart)) {
+                String voice      = noteLine.getVoice();
+                int    baseOctave = baseOctaveForVoice(voice);
+                List<List<NoteEntry>> measures = buildMeasures(noteLine.getTsfNotes(), baseOctave, keyFifths);
+                voiceMeasures.computeIfAbsent(voice, k -> new ArrayList<>()).addAll(measures);
+            }
+        }
+
+        int partId = 1;
+        List<VoiceData> result = new ArrayList<>();
+        for (Map.Entry<String, List<List<NoteEntry>>> e : voiceMeasures.entrySet()) {
+            result.add(new VoiceData(e.getKey(), partId++, e.getValue()));
+        }
+        return result;
+    }
+
+    private List<NoteLine> getNoteLinesOf(ScorePart scorePart) {
+        return scorePart.getSongLines().stream()
+                .filter(l -> l instanceof NoteLine)
+                .map(l -> (NoteLine) l)
+                .toList();
+    }
+
+    // --- time signature detection -------------------------------------------
+
+    private int detectBeatsPerMeasure(SongModel songModel) {
+        for (Object obj : songModel.getSongLines()) {
+            if (!(obj instanceof ScorePart sp)) continue;
+            for (NoteLine nl : getNoteLinesOf(sp)) {
+                int beats = beatsInFirstMeasure(nl.getTsfNotes());
+                if (beats > 0) return beats;
+            }
+        }
+        return 4;
+    }
+
+    private int beatsInFirstMeasure(List<TsfNote> notes) {
+        int beats = 0;
+        boolean seenBar = false;
+        for (TsfNote note : notes) {
+            if (note.isEndOfPart()) continue;
+            Accent a = note.getAccent();
+            if (a == Accent.BAR || a == Accent.DOUBLE_BAR) {
+                if (!seenBar) { seenBar = true; beats = 1; }
+                else          { break; }                     // second bar = end
+            } else if (seenBar && (a == Accent.NONE || a == Accent.ACCENTED)) {
+                beats++;
+            }
+        }
+        return beats;
+    }
+
+    // --- measure / beat-group building --------------------------------------
+
+    private List<List<NoteEntry>> buildMeasures(List<TsfNote> notes, int baseOctave, int keyFifths) {
+        List<List<TsfNote>> beatGroups = splitIntoBeatGroups(notes);
+
+        int[][] diatonicScale = getDiatonicScale(keyFifths);
+        int     tonicLetter   = TONIC_LETTER[keyFifths + 7];
+        Pitch   lastPitch     = resolvePitch("d", 0, diatonicScale, tonicLetter, baseOctave);
+
+        // Phase 1: flat list of NoteEntries (ties not yet set) + parallel measure-boundary flags
+        List<NoteEntry> flat       = new ArrayList<>();
+        List<Boolean>   startsNew  = new ArrayList<>(); // true = first note of new measure
+        boolean         firstGroup = true;
+
+        for (List<TsfNote> bg : beatGroups) {
+            boolean newMeasure = isMeasureStart(bg.get(0).getAccent()) && !firstGroup;
+            List<int[]> durInfo = computeDurations(bg);
+
+            for (int i = 0; i < bg.size(); i++) {
+                TsfNote note = bg.get(i);
+                Pitch pitch = lastPitch;
+                if (note.isNote()) {
+                    pitch     = resolvePitch(note.getNote(), note.getOctave(),
+                                             diatonicScale, tonicLetter, baseOctave);
+                    lastPitch = pitch;
+                }
+                flat.add(new NoteEntry(note, pitch, false, false,
+                                       durInfo.get(i)[0], durInfo.get(i)[1] == 1));
+                startsNew.add(i == 0 && newMeasure);
+            }
+            firstGroup = false;
+        }
+
+        // Phase 2: set ties by scanning the full flat list
+        for (int i = 0; i < flat.size(); i++) {
+            NoteEntry e = flat.get(i);
+            boolean tieStop  = e.note().isContinue();
+            boolean tieStart = (i + 1 < flat.size()) && flat.get(i + 1).note().isContinue();
+            flat.set(i, new NoteEntry(e.note(), e.pitch(), tieStart, tieStop, e.duration(), e.triplet()));
+        }
+
+        // Phase 3: split flat list into measures using boundary flags
+        List<List<NoteEntry>> measures = new ArrayList<>();
+        List<NoteEntry> measure = new ArrayList<>();
+        for (int i = 0; i < flat.size(); i++) {
+            if (startsNew.get(i) && !measure.isEmpty()) {
+                measures.add(measure);
+                measure = new ArrayList<>();
+            }
+            measure.add(flat.get(i));
+        }
+        if (!measure.isEmpty()) measures.add(measure);
+        return measures;
+    }
+
+    private static List<List<TsfNote>> splitIntoBeatGroups(List<TsfNote> notes) {
+        List<List<TsfNote>> beatGroups = new ArrayList<>();
+        List<TsfNote> group = new ArrayList<>();
+        for (TsfNote note : notes) {
+            if (note.isEndOfPart()) {
+                if (!group.isEmpty()) { beatGroups.add(group); group = new ArrayList<>(); }
+                continue;
+            }
+            if (isBeatStart(note.getAccent()) && !group.isEmpty()) {
+                beatGroups.add(group);
+                group = new ArrayList<>();
+            }
+            group.add(note);
+        }
+        if (!group.isEmpty()) beatGroups.add(group);
+        return beatGroups;
+    }
+
+    /**
+     * Assigns durations to notes within one beat group using the positional model.
+     *
+     * <pre>
+     *   prefix (length part)  position
+     *   (none / accent only)     0
+     *   .                        6   (second eighth)
+     *   , (before .)             3   (second 16th of first eighth)
+     *   , (after  .)             9   (second 16th of second eighth)
+     *   / (1st)                  0   (triplet)
+     *   / (2nd)                  4
+     *   / (3rd)                  8
+     * </pre>
+     *
+     * Duration of note i = position[i+1] − position[i]  (last → BEAT − position[last]).
+     *
+     * @return list of [duration, isTriplet(0/1)] parallel to the input list
+     */
+    private List<int[]> computeDurations(List<TsfNote> group) {
+        int n = group.size();
+        int[] positions  = new int[n];
+        int[] isTriplet  = new int[n];
+
+        boolean seenDot    = false;
+        int     tripletIdx = 0;
+
+        for (int i = 0; i < n; i++) {
+            char lc = lengthChar(group.get(i).getPrefix());
+            switch (lc) {
+                case '.' -> { positions[i] = 6; seenDot = true; }
+                case ',' -> positions[i] = seenDot ? 9 : 3;
+                case '/' -> { positions[i] = tripletIdx * 4; tripletIdx++; isTriplet[i] = 1; }
+                default  -> positions[i] = 0;
+            }
+        }
+
+        List<int[]> result = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            int nextPos = (i + 1 < n) ? positions[i + 1] : BEAT;
+            int dur     = nextPos - positions[i];
+            if (dur <= 0) dur = BEAT; // safety fallback
+            result.add(new int[]{dur, isTriplet[i]});
+        }
+        return result;
+    }
+
+    /** Returns the first length-relevant character (.  ,  /) from a prefix, or 0. */
+    private static char lengthChar(String prefix) {
+        for (char c : prefix.toCharArray()) {
+            if (c == '.' || c == ',' || c == '/') return c;
+        }
+        return 0;
+    }
+
+    private static boolean isBeatStart(Accent a) {
+        return a == Accent.BAR || a == Accent.DOUBLE_BAR
+                || a == Accent.NONE || a == Accent.ACCENTED;
+    }
+
+    private static boolean isMeasureStart(Accent a) {
+        return a == Accent.BAR || a == Accent.DOUBLE_BAR;
+    }
+
+    // --- metadata -----------------------------------------------------------
+
+    private Map<String, String> extractMetadata(SongModel songModel) {
+        Map<String, String> meta = new HashMap<>();
+        for (Object obj : songModel.getSongLines()) {
+            if (obj instanceof KeyValueLine kv) meta.put(kv.getKey(), kv.getValue());
+        }
+        return meta;
+    }
+
+    private void appendHeader(StringBuilder sb, Map<String, String> meta) {
+        String title    = meta.getOrDefault("T", "");
+        String composer = meta.getOrDefault("C", "");
+        if (!title.isEmpty()) {
+            sb.append("  <work>\n");
+            sb.append("    <work-title>").append(escapeXml(title)).append("</work-title>\n");
+            sb.append("  </work>\n");
+        }
+        if (!composer.isEmpty()) {
+            sb.append("  <identification>\n");
+            sb.append("    <creator type=\"composer\">").append(escapeXml(composer)).append("</creator>\n");
+            sb.append("  </identification>\n");
+        }
+    }
+
+    private void appendPartList(StringBuilder sb, List<VoiceData> voices) {
+        sb.append("  <part-list>\n");
+        for (VoiceData v : voices) {
+            String pid = "P" + v.partId();
+            sb.append("    <score-part id=\"").append(pid).append("\">\n");
+            sb.append("      <part-name>").append(escapeXml(voiceDisplayName(v.name()))).append("</part-name>\n");
+            sb.append("      <score-instrument id=\"").append(pid).append("-I1\">\n");
+            sb.append("        <instrument-name>Grand Piano</instrument-name>\n");
+            sb.append("      </score-instrument>\n");
+            sb.append("      <midi-instrument id=\"").append(pid).append("-I1\">\n");
+            sb.append("        <midi-channel>").append(v.partId()).append("</midi-channel>\n");
+            sb.append("        <midi-program>1</midi-program>\n");
+            sb.append("      </midi-instrument>\n");
+            sb.append("    </score-part>\n");
+        }
+        sb.append("  </part-list>\n");
+    }
+
+    // --- parts --------------------------------------------------------------
+
+    private void appendVoicePart(StringBuilder sb, VoiceData voice,
+                                  int keyFifths, int beatsPerMeasure) {
+        sb.append("  <part id=\"P").append(voice.partId()).append("\">\n");
+
+        int     measureNumber = 1;
+        boolean firstMeasure  = true;
+
+        for (List<NoteEntry> measure : voice.measures()) {
+            sb.append("    <measure number=\"").append(measureNumber++).append("\">\n");
+            if (firstMeasure) {
+                appendAttributes(sb, keyFifths, voice.name(), beatsPerMeasure);
+                firstMeasure = false;
+            }
+            for (NoteEntry entry : measure) appendNote(sb, entry);
+            sb.append("    </measure>\n");
+        }
+
+        sb.append("  </part>\n");
+    }
+
+    // --- XML emission -------------------------------------------------------
+
+    private void appendAttributes(StringBuilder sb, int keyFifths,
+                                   String voice, int beatsPerMeasure) {
+        sb.append("      <attributes>\n");
+        sb.append("        <divisions>").append(BEAT).append("</divisions>\n");
+        sb.append("        <key><fifths>").append(keyFifths).append("</fifths></key>\n");
+        sb.append("        <time><beats>").append(beatsPerMeasure)
+          .append("</beats><beat-type>4</beat-type></time>\n");
+        appendClef(sb, voice);
+        sb.append("      </attributes>\n");
+    }
+
+    private void appendClef(StringBuilder sb, String voice) {
+        String v = voice == null ? "" : voice.toLowerCase();
+        if (v.startsWith("b")) {
+            sb.append("        <clef><sign>F</sign><line>4</line></clef>\n");
+        } else if (v.startsWith("t")) {
+            sb.append("        <clef><sign>G</sign><line>2</line>");
+            sb.append("<clef-octave-change>-1</clef-octave-change></clef>\n");
+        } else {
+            sb.append("        <clef><sign>G</sign><line>2</line></clef>\n");
+        }
+    }
+
+    private void appendNote(StringBuilder sb, NoteEntry entry) {
+        TsfNote note = entry.note();
+        sb.append("      <note>\n");
+
+        if (note.isBreak()) {
+            sb.append("        <rest/>\n");
+        } else {
+            Pitch p = entry.pitch();
+            sb.append("        <pitch>\n");
+            sb.append("          <step>").append(p.step()).append("</step>\n");
+            if (p.alter() != 0)
+                sb.append("          <alter>").append(p.alter()).append("</alter>\n");
+            sb.append("          <octave>").append(p.octave()).append("</octave>\n");
+            sb.append("        </pitch>\n");
+        }
+
+        sb.append("        <duration>").append(entry.duration()).append("</duration>\n");
+
+        if (!note.isBreak()) {
+            if (entry.tieStop())  sb.append("        <tie type=\"stop\"/>\n");
+            if (entry.tieStart()) sb.append("        <tie type=\"start\"/>\n");
+        }
+
+        sb.append("        <voice>1</voice>\n");
+        sb.append("        <type>").append(noteType(entry.duration(), entry.triplet())).append("</type>\n");
+
+        // Dotted note: duration is not a power-of-two multiple of BEAT → add <dot/>
+        if (isDotted(entry.duration())) {
+            sb.append("        <dot/>\n");
+        }
+
+        if (entry.triplet()) {
+            sb.append("        <time-modification>");
+            sb.append("<actual-notes>3</actual-notes>");
+            sb.append("<normal-notes>2</normal-notes>");
+            sb.append("</time-modification>\n");
+        }
+
+        boolean hasTie = !note.isBreak() && (entry.tieStop() || entry.tieStart());
+        if (hasTie || entry.triplet()) {
+            sb.append("        <notations>\n");
+            if (hasTie) {
+                if (entry.tieStop())  sb.append("          <tied type=\"stop\"/>\n");
+                if (entry.tieStart()) sb.append("          <tied type=\"start\"/>\n");
+            }
+            if (entry.triplet()) {
+                String tupletType = entry.tieStop() ? "stop" : "start";
+                sb.append("          <tuplet type=\"").append(tupletType).append("\"/>\n");
+            }
+            sb.append("        </notations>\n");
+        }
+
+        sb.append("      </note>\n");
+    }
+
+    // --- helpers ------------------------------------------------------------
+
+    // --- pitch resolution (moveable-do) -------------------------------------
+
+    /** Alter value (+1 sharp / -1 flat / 0) for each letter C…B in the given key. */
+    private static int[] getKeyAlters(int keyFifths) {
+        int[] alters = new int[7];
+        if (keyFifths > 0) {
+            for (int i = 0; i < Math.min(keyFifths, 7); i++) alters[SHARP_ORDER[i]] = 1;
+        } else {
+            for (int i = 0; i < Math.min(-keyFifths, 7); i++) alters[FLAT_ORDER[i]]  = -1;
+        }
+        return alters;
+    }
+
+    /**
+     * Returns the 7 diatonic scale degrees for the given key as {letterIndex, alter} pairs.
+     * Index 0 = do (tonic), 1 = re, …, 6 = ti.
+     */
+    private static int[][] getDiatonicScale(int keyFifths) {
+        int[] alters = getKeyAlters(keyFifths);
+        int   tonic  = TONIC_LETTER[keyFifths + 7];
+        int[][] scale = new int[7][2];
+        for (int i = 0; i < 7; i++) {
+            int letterIdx = (tonic + i) % 7;
+            scale[i][0] = letterIdx;
+            scale[i][1] = alters[letterIdx];
+        }
+        return scale;
+    }
+
+    /**
+     * Resolves a Tonic-Solfa syllable + octave modifier to an absolute MusicXML pitch.
+     *
+     * <p>Because scientific-pitch octave numbers reset at C, notes whose letter index
+     * is lower than the tonic's letter (e.g. t=C# in D-major) need +1 to their octave.
+     */
+    private static Pitch resolvePitch(String noteName, int octaveMod,
+                                      int[][] diatonicScale, int tonicLetter,
+                                      int baseOctave) {
+        int[] degreeInfo = TSF_DEGREE.get(noteName);
+        if (degreeInfo == null) return new Pitch("C", 0, baseOctave + octaveMod);
+
+        int degree      = degreeInfo[0];
+        int alterAdjust = degreeInfo[1];
+
+        int letterIdx = diatonicScale[degree][0];
+        int alter     = diatonicScale[degree][1] + alterAdjust;
+
+        // Notes that "wrap around" past C land in the next scientific octave relative to the tonic
+        int octaveShift = (letterIdx < tonicLetter) ? 1 : 0;
+
+        return new Pitch(LETTER_NAMES[letterIdx], alter, baseOctave + octaveMod + octaveShift);
+    }
+
+    /** Returns the MusicXML note type string for the given duration. */
+    private String noteType(int duration, boolean triplet) {
+        if (triplet) return "eighth";  // triplet-eighth (dur=4)
+        return switch (duration) {
+            case 48 -> "whole";
+            case 24 -> "half";
+            case 12 -> "quarter";
+            case  9 -> "eighth";   // dotted-eighth
+            case  6 -> "eighth";
+            case  3 -> "16th";
+            default -> "quarter";
+        };
+    }
+
+    /**
+     * Returns true when the duration corresponds to a dotted note value
+     * (i.e., 3/2 of a power-of-two note: 9 = dotted-eighth, 18 = dotted-quarter).
+     */
+    private boolean isDotted(int duration) {
+        return duration == 9 || duration == 18;
+    }
+
+    private int baseOctaveForVoice(String voice) {
+        if (voice == null) return TREBLE_BASE_OCTAVE;
+        String v = voice.toLowerCase();
+        return (v.startsWith("t") || v.startsWith("b")) ? BASS_BASE_OCTAVE : TREBLE_BASE_OCTAVE;
+    }
+
+    private String voiceDisplayName(String voice) {
+        if (voice == null || voice.isEmpty()) return "Voice";
+        return switch (voice.toLowerCase()) {
+            case "s" -> "Soprano";
+            case "a" -> "Alto";
+            case "t" -> "Tenor";
+            case "b" -> "Bass";
+            default  -> voice;
+        };
+    }
+
+    /** Strips key qualifiers like "D-Dur", "Bb-Moll" → "D", "Bb". */
+    private int getKeyFifths(String key) {
+        if (key == null) return 0;
+        String root = key.trim().split("[-\\s]")[0];
+        return switch (root) {
+            case "G"  ->  1; case "D"  ->  2; case "A"  ->  3;
+            case "E"  ->  4; case "B"  ->  5; case "F#" ->  6; case "C#" ->  7;
+            case "F"  -> -1; case "Bb" -> -2; case "Eb" -> -3;
+            case "Ab" -> -4; case "Db" -> -5; case "Gb" -> -6; case "Cb" -> -7;
+            default   ->  0;
+        };
+    }
+
+    private String escapeXml(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;")
+                   .replace(">", "&gt;").replace("\"", "&quot;");
+    }
+}

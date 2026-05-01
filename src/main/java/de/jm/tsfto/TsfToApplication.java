@@ -37,7 +37,7 @@ public class TsfToApplication extends CliApp {
         try {
             Files.writeString(Path.of(baseName + ".tex"), songModel.toLatex());
             if (musicxml) {
-                Files.writeString(Path.of(baseName + ".xml"), new MusicXmlWriter().toMusicXml(songModel));
+                new MusicXmlWriter().convert(file.toPath(), Path.of(baseName + ".xml"));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
