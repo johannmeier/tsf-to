@@ -330,21 +330,19 @@ public class MusicXmlWriter {
         List<List<TsfNote>> beatGroups  = new ArrayList<>();
         List<String>        terminators = new ArrayList<>();
         List<TsfNote>       group       = new ArrayList<>();
-        int lastSectionEndIdx = -1;
 
         for (TsfNote note : notes) {
             if (note.isEndOfPart()) {
                 if (!group.isEmpty()) {
                     beatGroups.add(group);
-                    terminators.add("section-end"); // resolved below
-                    lastSectionEndIdx = terminators.size() - 1;
+                    terminators.add("light-light");
                     group = new ArrayList<>();
                 }
                 continue;
             }
             if (isBeatStart(note.getAccent()) && !group.isEmpty()) {
                 beatGroups.add(group);
-                terminators.add(null);
+                terminators.add(note.getAccent() == Accent.DOUBLE_BAR ? "light-light" : null);
                 group = new ArrayList<>();
             }
             group.add(note);
@@ -352,13 +350,6 @@ public class MusicXmlWriter {
         if (!group.isEmpty()) {
             beatGroups.add(group);
             terminators.add(null);
-        }
-
-        // Last section-end marker = final barline; all others = double barline
-        for (int i = 0; i < terminators.size(); i++) {
-            if ("section-end".equals(terminators.get(i))) {
-                terminators.set(i, i == lastSectionEndIdx ? "light-heavy" : "light-light");
-            }
         }
 
         return new BeatGroupsResult(beatGroups, terminators);
@@ -484,7 +475,7 @@ public class MusicXmlWriter {
             List<NoteEntry> measure     = voice.measures().get(mi);
             String          barlineType = voice.measureBarlines().get(mi);
             boolean         isLast      = (mi == totalMeasures - 1);
-            if (isLast && barlineType == null) barlineType = "light-heavy";
+            if (isLast) barlineType = "light-heavy";
             sb.append("    <measure number=\"").append(measureNumber++).append("\">\n");
             if (firstMeasure) {
                 appendAttributes(sb, keyFifths, voice.name(), beatsPerMeasure);
