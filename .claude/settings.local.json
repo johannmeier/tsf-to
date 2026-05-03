@@ -13,7 +13,10 @@
       "Bash(java -jar target/tsf-to-1.0-SNAPSHOT.jar tsf/HowDeepIsYourLove.tsf --musicxml)",
       "Bash(python3 *)",
       "Bash(mvn *)",
-      "Bash(java *)"
+      "Bash(java *)",
+      "Bash(java -jar target/tsf-to-1.0-SNAPSHOT.jar --musicxml tsf/DerHerrIstMeinHirt.tsf)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(echo \"Exit=$?\")"
     ]
   },
   "hooks": {

@@ -11,11 +11,7 @@ import de.jm.tsfto.parser.TsfTokenParser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Converts a TSF song to MusicXML partwise (one &lt;part&gt; per voice).
@@ -97,7 +93,9 @@ public class MusicXmlWriter {
                               boolean tieStart, boolean tieStop,
                               int duration, boolean triplet) {}
 
-    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures) {}
+    private record BeatGroupsResult(List<List<TsfNote>> groups, List<String> terminators) {}
+    private record MeasureData(List<List<NoteEntry>> measures, List<String> barlineTypes) {}
+    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures, List<String> measureBarlines) {}
 
     // --- public API ---------------------------------------------------------
 
@@ -153,15 +151,45 @@ public class MusicXmlWriter {
         for (Map.Entry<String, List<TsfNote>> e : voiceNotes.entrySet()) {
             String voice      = e.getKey();
             int    baseOctave = baseOctaveForVoice(voice);
-            List<List<NoteEntry>> measures = buildMeasures(e.getValue(), baseOctave, keyFifths);
-            result.add(new VoiceData(voice, partId++, measures));
+            MeasureData md = buildMeasures(e.getValue(), baseOctave, keyFifths);
+            result.add(new VoiceData(voice, partId++, md.measures(), md.barlineTypes()));
         }
-        return result;
+
+        // Pad voices that start mid-piece (fewer measures) with whole-measure rests at the front.
+        int maxMeasures = result.stream().mapToInt(v -> v.measures().size()).max().orElse(0);
+        List<List<NoteEntry>> refMeasures = result.stream()
+                .max(Comparator.comparingInt(v -> v.measures().size()))
+                .map(VoiceData::measures).orElse(List.of());
+        List<VoiceData> aligned = new ArrayList<>();
+        for (VoiceData vd : result) {
+            int pad = maxMeasures - vd.measures().size();
+            if (pad <= 0) { aligned.add(vd); continue; }
+            List<List<NoteEntry>> paddedMeasures = new ArrayList<>();
+            List<String> paddedBarlines = new ArrayList<>();
+            for (int i = 0; i < pad; i++) {
+                int dur = i < refMeasures.size()
+                        ? refMeasures.get(i).stream().mapToInt(NoteEntry::duration).sum()
+                        : BEAT * 4;
+                paddedMeasures.add(restMeasure(dur));
+                paddedBarlines.add(null);
+            }
+            paddedMeasures.addAll(vd.measures());
+            paddedBarlines.addAll(vd.measureBarlines());
+            aligned.add(new VoiceData(vd.name(), vd.partId(), paddedMeasures, paddedBarlines));
+        }
+        return aligned;
+    }
+
+    private List<NoteEntry> restMeasure(int duration) {
+        TsfNote rest = new TsfNote(0, "", TsfNote.Length.UNKNOWN, Accent.NONE, ":", "");
+        return List.of(new NoteEntry(rest, null, null, false, false, duration, false));
     }
 
     private List<NoteLine> getNoteLinesOf(ScorePart scorePart) {
         return scorePart.getSongLines().stream()
-                .filter(l -> l instanceof NoteLine)
+                .filter(l -> l instanceof NoteLine nl
+                        && NoteLine.matches(nl.getLine())
+                        && !nl.getVoice().isEmpty())
                 .map(l -> (NoteLine) l)
                 .toList();
     }
@@ -197,19 +225,23 @@ public class MusicXmlWriter {
 
     // --- measure / beat-group building --------------------------------------
 
-    private List<List<NoteEntry>> buildMeasures(List<TsfNote> notes, int baseOctave, int keyFifths) {
-        List<List<TsfNote>> beatGroups = splitIntoBeatGroups(notes);
+    private MeasureData buildMeasures(List<TsfNote> notes, int baseOctave, int keyFifths) {
+        BeatGroupsResult split = splitIntoBeatGroups(notes);
+        List<List<TsfNote>> beatGroups  = split.groups();
+        List<String>        terminators = split.terminators();
 
         int[][] diatonicScale = getDiatonicScale(keyFifths);
         int     tonicLetter   = TONIC_LETTER[keyFifths + 7];
         Pitch   lastPitch     = resolvePitch("d", 0, diatonicScale, tonicLetter, baseOctave);
 
-        // Phase 1: flat list of NoteEntries (ties not yet set) + parallel measure-boundary flags
-        List<NoteEntry> flat       = new ArrayList<>();
-        List<Boolean>   startsNew  = new ArrayList<>(); // true = first note of new measure
-        boolean         firstGroup = true;
+        // Phase 1: flat list of NoteEntries (ties not yet set) + measure-boundary + per-note barline
+        List<NoteEntry> flat         = new ArrayList<>();
+        List<Boolean>   startsNew    = new ArrayList<>(); // true = first note of new measure
+        List<String>    flatBarlines = new ArrayList<>(); // barline from the group this note belongs to
+        boolean         firstGroup   = true;
 
-        for (List<TsfNote> bg : beatGroups) {
+        for (int gi = 0; gi < beatGroups.size(); gi++) {
+            List<TsfNote> bg = beatGroups.get(gi);
             boolean newMeasure = isMeasureStart(bg.get(0).getAccent()) && !firstGroup;
             List<int[]> durInfo = computeDurations(bg);
 
@@ -233,6 +265,7 @@ public class MusicXmlWriter {
                 flat.add(new NoteEntry(note, pitch, secondPitch, false, false,
                                        durInfo.get(i)[0], durInfo.get(i)[1] == 1));
                 startsNew.add(i == 0 && newMeasure);
+                flatBarlines.add(terminators.get(gi));
             }
             firstGroup = false;
         }
@@ -248,6 +281,8 @@ public class MusicXmlWriter {
 
         // Phase 2.5: merge note + following continues into a single note when the combined
         // duration is a standard value and no bar line lies in between.
+        // The merged note inherits the barline of the last absorbed continue (propagating
+        // section-end barlines that live on trailing :-  notes through the merge).
         for (int i = 0; i < flat.size(); i++) {
             NoteEntry e = flat.get(i);
             if (!e.tieStart() || e.note().isContinue()) continue;
@@ -256,45 +291,77 @@ public class MusicXmlWriter {
                     && !startsNew.get(i + 1)) {
                 int combined = e.duration() + flat.get(i + 1).duration();
                 if (!isValidDuration(combined)) break;
+                String inherited = flatBarlines.get(i + 1) != null
+                        ? flatBarlines.get(i + 1) : flatBarlines.get(i);
                 e = new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
                                   flat.get(i + 1).tieStart(), e.tieStop(),
                                   combined, e.triplet());
                 flat.set(i, e);
                 flat.remove(i + 1);
                 startsNew.remove(i + 1);
+                flatBarlines.set(i, inherited);
+                flatBarlines.remove(i + 1);
             }
         }
 
         // Phase 3: split flat list into measures using boundary flags
-        List<List<NoteEntry>> measures = new ArrayList<>();
-        List<NoteEntry> measure = new ArrayList<>();
+        List<List<NoteEntry>> measures        = new ArrayList<>();
+        List<String>          measureBarlines = new ArrayList<>();
+        List<NoteEntry>       measure         = new ArrayList<>();
+        String                lastBarline     = null;
+
         for (int i = 0; i < flat.size(); i++) {
             if (startsNew.get(i) && !measure.isEmpty()) {
                 measures.add(measure);
+                measureBarlines.add(lastBarline);
                 measure = new ArrayList<>();
             }
             measure.add(flat.get(i));
+            lastBarline = flatBarlines.get(i);
         }
-        if (!measure.isEmpty()) measures.add(measure);
-        return measures;
+        if (!measure.isEmpty()) {
+            measures.add(measure);
+            measureBarlines.add(lastBarline);
+        }
+        return new MeasureData(measures, measureBarlines);
     }
 
-    private static List<List<TsfNote>> splitIntoBeatGroups(List<TsfNote> notes) {
-        List<List<TsfNote>> beatGroups = new ArrayList<>();
-        List<TsfNote> group = new ArrayList<>();
+    private static BeatGroupsResult splitIntoBeatGroups(List<TsfNote> notes) {
+        List<List<TsfNote>> beatGroups  = new ArrayList<>();
+        List<String>        terminators = new ArrayList<>();
+        List<TsfNote>       group       = new ArrayList<>();
+        int lastSectionEndIdx = -1;
+
         for (TsfNote note : notes) {
             if (note.isEndOfPart()) {
-                if (!group.isEmpty()) { beatGroups.add(group); group = new ArrayList<>(); }
+                if (!group.isEmpty()) {
+                    beatGroups.add(group);
+                    terminators.add("section-end"); // resolved below
+                    lastSectionEndIdx = terminators.size() - 1;
+                    group = new ArrayList<>();
+                }
                 continue;
             }
             if (isBeatStart(note.getAccent()) && !group.isEmpty()) {
                 beatGroups.add(group);
+                terminators.add(null);
                 group = new ArrayList<>();
             }
             group.add(note);
         }
-        if (!group.isEmpty()) beatGroups.add(group);
-        return beatGroups;
+        if (!group.isEmpty()) {
+            beatGroups.add(group);
+            terminators.add(null);
+        }
+
+        // Last section-end marker = final barline; all others = double barline
+        for (int i = 0; i < terminators.size(); i++) {
+            if ("section-end".equals(terminators.get(i))) {
+                terminators.set(i, i == lastSectionEndIdx ? "light-heavy" : "light-light");
+            }
+        }
+
+        return new BeatGroupsResult(beatGroups, terminators);
     }
 
     /**
@@ -371,8 +438,8 @@ public class MusicXmlWriter {
     }
 
     private void appendHeader(StringBuilder sb, Map<String, String> meta) {
-        String title    = meta.getOrDefault("T", "");
-        String composer = meta.getOrDefault("C", "");
+        String title    = stripLatex(meta.getOrDefault("T", ""));
+        String composer = stripLatex(meta.getOrDefault("C", ""));
         if (!title.isEmpty()) {
             sb.append("  <work>\n");
             sb.append("    <work-title>").append(escapeXml(title)).append("</work-title>\n");
@@ -412,7 +479,12 @@ public class MusicXmlWriter {
         int     measureNumber = 1;
         boolean firstMeasure  = true;
 
-        for (List<NoteEntry> measure : voice.measures()) {
+        int totalMeasures = voice.measures().size();
+        for (int mi = 0; mi < totalMeasures; mi++) {
+            List<NoteEntry> measure     = voice.measures().get(mi);
+            String          barlineType = voice.measureBarlines().get(mi);
+            boolean         isLast      = (mi == totalMeasures - 1);
+            if (isLast && barlineType == null) barlineType = "light-heavy";
             sb.append("    <measure number=\"").append(measureNumber++).append("\">\n");
             if (firstMeasure) {
                 appendAttributes(sb, keyFifths, voice.name(), beatsPerMeasure);
@@ -420,10 +492,17 @@ public class MusicXmlWriter {
                 firstMeasure = false;
             }
             for (NoteEntry entry : measure) appendNote(sb, entry);
+            if (barlineType != null) appendBarline(sb, barlineType);
             sb.append("    </measure>\n");
         }
 
         sb.append("  </part>\n");
+    }
+
+    private void appendBarline(StringBuilder sb, String barStyle) {
+        sb.append("      <barline location=\"right\">\n");
+        sb.append("        <bar-style>").append(barStyle).append("</bar-style>\n");
+        sb.append("      </barline>\n");
     }
 
     private void appendTempo(StringBuilder sb, int bpm) {
@@ -501,8 +580,10 @@ public class MusicXmlWriter {
             sb.append("</time-modification>\n");
         }
 
-        boolean hasTie = !note.isBreak() && (entry.tieStop() || entry.tieStart());
-        if (hasTie || entry.triplet()) {
+        boolean hasTie          = !note.isBreak() && (entry.tieStop() || entry.tieStart());
+        boolean hasArticulation = !note.isBreak() && (note.isAccented() || note.isMarcato()
+                                                   || note.isStaccato() || note.isTenuto());
+        if (hasTie || entry.triplet() || hasArticulation) {
             sb.append("        <notations>\n");
             if (hasTie) {
                 if (entry.tieStop())  sb.append("          <tied type=\"stop\"/>\n");
@@ -511,6 +592,15 @@ public class MusicXmlWriter {
             if (entry.triplet()) {
                 String tupletType = entry.tieStop() ? "stop" : "start";
                 sb.append("          <tuplet type=\"").append(tupletType).append("\"/>\n");
+            }
+            if (hasArticulation) {
+                sb.append("          <articulations>\n");
+                if (note.isAccented())       sb.append("            <accent/>\n");
+                if (note.isMarcato())        sb.append("            <strong-accent/>\n");
+                if (note.isPortato())        sb.append("            <detached-legato/>\n");
+                else if (note.isStaccato())  sb.append("            <staccato/>\n");
+                else if (note.isTenuto())    sb.append("            <tenuto/>\n");
+                sb.append("          </articulations>\n");
             }
             sb.append("        </notations>\n");
         }
@@ -636,11 +726,15 @@ public class MusicXmlWriter {
     private String voiceDisplayName(String voice) {
         if (voice == null || voice.isEmpty()) return "Voice";
         return switch (voice.toLowerCase()) {
-            case "s" -> "Soprano";
-            case "a" -> "Alto";
-            case "t" -> "Tenor";
-            case "b" -> "Bass";
-            default  -> voice;
+            case "s"  -> "Soprano";
+            case "s2" -> "Soprano II";
+            case "a"  -> "Alto";
+            case "a2" -> "Alto II";
+            case "t"  -> "Tenor";
+            case "t2" -> "Tenor II";
+            case "b"  -> "Bass";
+            case "b2" -> "Bass II";
+            default   -> voice;
         };
     }
 
@@ -666,5 +760,21 @@ public class MusicXmlWriter {
     private String escapeXml(String text) {
         return text.replace("&", "&amp;").replace("<", "&lt;")
                    .replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    /** Strips LaTeX markup from a text string, keeping plain content. */
+    private String stripLatex(String text) {
+        if (text == null) return "";
+        // \\ is a LaTeX newline — replace with a separator
+        text = text.replace("\\\\", " – ");
+        // {\cmd content} → content  (e.g. {\small Subtitle})
+        text = text.replaceAll("\\{\\\\[a-zA-Z]+\\s+([^}]*)\\}", "$1");
+        // \cmd{content} → content
+        text = text.replaceAll("\\\\[a-zA-Z]+\\{([^}]*)\\}", "$1");
+        // remaining standalone \cmd → remove
+        text = text.replaceAll("\\\\[a-zA-Z]+", "");
+        // clean up stray braces
+        text = text.replace("{", "").replace("}", "");
+        return text.trim();
     }
 }

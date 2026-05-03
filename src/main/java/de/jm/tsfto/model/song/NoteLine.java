@@ -51,23 +51,23 @@ public class NoteLine extends SongLine {
         return latexBuilder.toString();
     }
 
+    private final static String tokenStarts = "!|;:.,`";
     public static boolean matches(String line) {
+        if (line == null || line.isEmpty()) {
+            return false;
+        }
+
         if (isKeyValue(line)) {
             return line.startsWith("v:");
         }
 
-        final String validChars = "drmfsltaeib_=-+*0123456789!|;:.,/'?^%~>\" ";
-        for (char c : line.toCharArray()) {
-            if (validChars.indexOf(c) < 0) {
+        String[] tokens = line.split(" +");
+        for (String token : tokens) {
+            if (token.isEmpty() || !tokenStarts.contains(String.valueOf(token.charAt(0)))) {
                 return false;
             }
         }
-
-        int colonCount = getCountTokenStartingWith(':', line);
-        int bangCount = getCountTokenStartingWith('!', line);
-        bangCount += getCountTokenStartingWith('|', line);
-        int semicolonCount = getCountTokenStartingWith(';', line);
-        return getCountTokenStartingWith('*', line) == 0 & (colonCount + semicolonCount + bangCount > 1);
+        return true;
     }
 
     public static int getCountTokenStartingWith(char ch, String line) {

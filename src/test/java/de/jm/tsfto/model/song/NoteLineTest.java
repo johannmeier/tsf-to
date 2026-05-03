@@ -8,7 +8,8 @@ class NoteLineTest {
 
     @Test
     void matches() {
-        assertTrue(NoteLine.matches("!d .l :s, d . ;d-t :l"));
+        assertFalse(NoteLine.matches(" Der |Herr *  ist mein |Hirt;*  *  * |mir  **wird_nichts |man-*>geln."));
+        assertTrue(NoteLine.matches("!d .l :s, `d . ;d-t :l"));
         assertFalse(NoteLine.matches("T: !d .l :s, d . ;d-t :l"));
         assertFalse(NoteLine.matches("!the sun shines always"));
         assertFalse(NoteLine.matches("s: !the sun shines always"));
