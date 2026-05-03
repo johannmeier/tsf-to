@@ -14,6 +14,7 @@ class NoteLineTest {
         assertFalse(NoteLine.matches("!the sun shines always"));
         assertFalse(NoteLine.matches("s: !the sun shines always"));
         assertFalse(NoteLine.matches("C: !the sun shines always"));
+        assertTrue(NoteLine.matches("!s .s :s !- :s* /l* /ta* !s :l .ta"));
     }
 
     @Test

@@ -137,12 +137,20 @@ public class MusicXmlWriter {
 
     private List<VoiceData> collectVoices(SongModel songModel, int keyFifths) {
         Map<String, List<TsfNote>> voiceNotes = new LinkedHashMap<>();
+        List<String> lastVoiceOrder = new ArrayList<>();
 
         for (Object obj : songModel.getSongLines()) {
             if (!(obj instanceof ScorePart scorePart)) continue;
-            for (NoteLine noteLine : getNoteLinesOf(scorePart)) {
-                String voice = noteLine.getVoice();
-                voiceNotes.computeIfAbsent(voice, k -> new ArrayList<>()).addAll(noteLine.getTsfNotes());
+            List<NoteLine> voicedLines = getNoteLinesOf(scorePart);
+            if (!voicedLines.isEmpty()) {
+                lastVoiceOrder = voicedLines.stream().map(NoteLine::getVoice).toList();
+                for (NoteLine nl : voicedLines)
+                    voiceNotes.computeIfAbsent(nl.getVoice(), k -> new ArrayList<>()).addAll(nl.getTsfNotes());
+            } else {
+                List<NoteLine> allLines = getAllNoteLinesOf(scorePart);
+                for (int i = 0; i < Math.min(allLines.size(), lastVoiceOrder.size()); i++)
+                    voiceNotes.computeIfAbsent(lastVoiceOrder.get(i), k -> new ArrayList<>())
+                              .addAll(allLines.get(i).getTsfNotes());
             }
         }
 
@@ -183,6 +191,13 @@ public class MusicXmlWriter {
     private List<NoteEntry> restMeasure(int duration) {
         TsfNote rest = new TsfNote(0, "", TsfNote.Length.UNKNOWN, Accent.NONE, ":", "");
         return List.of(new NoteEntry(rest, null, null, false, false, duration, false));
+    }
+
+    private List<NoteLine> getAllNoteLinesOf(ScorePart scorePart) {
+        return scorePart.getSongLines().stream()
+                .filter(l -> l instanceof NoteLine nl && NoteLine.matches(nl.getLine()))
+                .map(l -> (NoteLine) l)
+                .toList();
     }
 
     private List<NoteLine> getNoteLinesOf(ScorePart scorePart) {
@@ -283,9 +298,11 @@ public class MusicXmlWriter {
         // duration is a standard value and no bar line lies in between.
         // The merged note inherits the barline of the last absorbed continue (propagating
         // section-end barlines that live on trailing :-  notes through the merge).
+        // Continue notes (including !-) can serve as merge heads so that a full-measure
+        // tie continuation like "!- :- :- :-" collapses to a single whole note.
         for (int i = 0; i < flat.size(); i++) {
             NoteEntry e = flat.get(i);
-            if (!e.tieStart() || e.note().isContinue()) continue;
+            if (!e.tieStart()) continue;
             while (i + 1 < flat.size()
                     && flat.get(i + 1).note().isContinue()
                     && !startsNew.get(i + 1)) {

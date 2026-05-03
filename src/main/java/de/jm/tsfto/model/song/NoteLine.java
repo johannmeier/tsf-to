@@ -51,7 +51,7 @@ public class NoteLine extends SongLine {
         return latexBuilder.toString();
     }
 
-    private final static String tokenStarts = "!|;:.,`";
+    private final static String tokenStarts = "!|;:.,`/";
     public static boolean matches(String line) {
         if (line == null || line.isEmpty()) {
             return false;

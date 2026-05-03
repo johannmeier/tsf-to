@@ -16,7 +16,10 @@
       "Bash(java *)",
       "Bash(java -jar target/tsf-to-1.0-SNAPSHOT.jar --musicxml tsf/DerHerrIstMeinHirt.tsf)",
       "Bash(echo \"Exit: $?\")",
-      "Bash(echo \"Exit=$?\")"
+      "Bash(echo \"Exit=$?\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\johan\\\\git\\\\tsf\" -Recurse -Filter \"pom.xml\")",
+      "Bash(unzip -p /c/Users/johan/git/tsf/tsf-to/target/tsf-to-1.0-SNAPSHOT.jar META-INF/MANIFEST.MF)",
+      "Bash(jar tf *)"
     ]
   },
   "hooks": {
