@@ -77,9 +77,11 @@ public class SymbolLine extends SongLine {
             int cols = getColCount(token);
             String aligned = isRightAligned(token) ? "R" : "L";
             String processedToken = processToken(token);
-            processedToken = fillSymbols(processedToken);
+            processedToken = fillSymbols(processedToken, cols);
             if (processedToken.isEmpty()) {
-                latexBuilder.append("&".repeat(cols));
+                latexBuilder.repeat("&", cols);
+            } else if(token.startsWith("1.") || token.startsWith("2.")) {
+                latexBuilder.append(processedToken).append("&");
             } else {
                 if (!latexBuilder.isEmpty() && latexBuilder.charAt(latexBuilder.length() - 1) != '&') {
                     latexBuilder.append("&");
@@ -113,19 +115,21 @@ public class SymbolLine extends SongLine {
         processToken = processToken.replaceAll(" \\+", " ");
         return processToken;
     }
-
     static String fillSymbols(String token) {
+        return fillSymbols(token, 1);
+    }
+
+    static String fillSymbols(String token, int colCount) {
         StringBuilder latexBuilder = new StringBuilder();
         if (token.startsWith("1.") || token.startsWith("2.")) {
-            String[] tokenParts = token.split("_");
+            String[] tokenParts = token.split("_+");
             String key = tokenParts[0].substring(0, 2);
-            String length = tokenParts[0].substring(2);
             latexBuilder.append(symbolToLatex.get(key));
             if (tokenParts.length > 1) {
                 String part2 = tokenParts[1];
                 latexBuilder.append("[%s]".formatted(symbolToLatex.getOrDefault(part2, part2)));
             }
-            latexBuilder.append("{%s}".formatted(length));
+            latexBuilder.append("{%d}".formatted(colCount));
             return latexBuilder.toString();
         }
 

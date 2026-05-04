@@ -11,9 +11,10 @@ clean:
 
 %.tex: tsf/%.tsf
 	echo "tsf -> tex"
-	java -cp target/classes de.jm.tsfto.TsfToApplication $< $@
+	java -cp target/classes de.jm.tsfto.TsfToApplication --musicxml $< $@
 
 
 %.pdf: %.tex tonic-solfa.sty
 	echo $(PDF)
 	latexmk $<
+

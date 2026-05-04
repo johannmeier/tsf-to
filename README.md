@@ -35,7 +35,7 @@
 | $       | coda sign                                                                                 |
 | ds      | dal segno                                                                                 |
 | ds      | da capo                                                                                   |
-| 1.      | first repeat                                                                              |
+| 1.      | first repeat: eg. 1.***ds                                                                |
 | 2.      | second repeat                                                                             |
 | f       | forte                                                                                     |
 | mf      | mezzo forte                                                                               |

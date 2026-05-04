@@ -26,6 +26,7 @@ class SymbolLineTest {
         assertEquals(2, SymbolLine.getColCount("*$"));
         assertEquals(2, SymbolLine.getColCount("$*"));
         assertEquals(3, SymbolLine.getColCount("$>*DC"));
+        assertEquals(4, SymbolLine.getColCount("1.**dc"));
     }
 
     @Test
@@ -43,9 +44,9 @@ class SymbolLineTest {
     void fillSymbols() {
         assertEquals("\\mnbr{50}", SymbolLine.fillSymbols("b:50"));
         assertEquals("\\tpart{A}", SymbolLine.fillSymbols("p:A"));
-        assertEquals("\\first{4}", SymbolLine.fillSymbols("1.4"));
-        assertEquals("\\first[\\rdc]{4}", SymbolLine.fillSymbols("1.4_dc"));
-        assertEquals("\\first[\\rds]{4}", SymbolLine.fillSymbols("1.4_ds"));
+        assertEquals("\\first{1}", SymbolLine.fillSymbols("1."));
+        assertEquals("\\first[\\rdc]{4}", SymbolLine.fillSymbols("1.__dc", 4));
+        assertEquals("\\first[\\rds]{4}", SymbolLine.fillSymbols("1.__ds", 4));
     }
 
     @Test

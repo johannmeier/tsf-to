@@ -751,11 +751,11 @@ public class MusicXmlWriter {
         if (key == null) return 0;
         String root = key.trim().split("[-\\s]")[0];
         return switch (root) {
-            case "G"  ->  1; case "D"  ->  2; case "A"  ->  3;
-            case "E"  ->  4; case "B"  ->  5; case "F#" ->  6; case "C#" ->  7;
-            case "F"  -> -1; case "Bb" -> -2; case "Eb" -> -3;
-            case "Ab" -> -4; case "Db" -> -5; case "Gb" -> -6; case "Cb" -> -7;
-            default   ->  0;
+            case "G"   ->  1; case "D"   ->  2; case "A"   ->  3;
+            case "E"   ->  4; case "H"   ->  5; case "Fis" ->  6; case "Cis" ->  7;
+            case "F"   -> -1; case "B"   -> -2; case "Es"  -> -3;
+            case "As"  -> -4; case "Des" -> -5; case "Ges" -> -6; case "Ces" -> -7;
+            default    ->  0;
         };
     }
 
