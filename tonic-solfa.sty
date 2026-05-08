@@ -2,6 +2,9 @@
 
 \usepackage{lmodern}
 
+\usepackage{fontspec}
+\newfontface\musicfont{Noto Music}  % oder: Segoe UI Symbol (Windows)
+
 %\usepackage{etoolbox}
 %\AtBeginEnvironment{tabular}{\sffamily} % Changes all tabular environments to sans-serif
 \usepackage[normalem]{ulem}
@@ -407,6 +410,7 @@
 \IfFileExists{lilyglyphs.sty}
 {\newcommand\rse{\hspace{0.5em}\lilyGlyph[raise=0.7]{scripts.segno}}} % Repeats SEgno
 {\newcommand\rse{\%}} % Repeats SEgno
+%\newcommand\rse{\raisebox{-0.5ex}[0pt][0pt]{\,{\musicfont\char"1D10B}}}
 
 \IfFileExists{lilyglyphs.sty}
 {\newcommand\fer{\hspace{0.5em}\lilyGlyph[raise=-0.3]{scripts.ufermata}}} % FERmata

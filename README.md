@@ -20,6 +20,8 @@
     * =<float> underpoint number of notes
     * two notes in one column: :d+ r (needed for formatting)
     * double note: d* (needed for formatting)
+    * / breath
+    * // caesura
 * Question marks are ignored
 
 ## Symbol line
@@ -34,8 +36,8 @@
 | %       | segno sign                                                                                |
 | $       | coda sign                                                                                 |
 | ds      | dal segno                                                                                 |
-| ds      | da capo                                                                                   |
-| 1.      | first repeat: eg. 1.***ds                                                                |
+| dc      | da capo                                                                                   |
+| 1.      | first repeat: eg. 1.***ds                                                                 |
 | 2.      | second repeat                                                                             |
 | f       | forte                                                                                     |
 | mf      | mezzo forte                                                                               |
@@ -49,8 +51,8 @@
 | b:int   | Bar number                                                                                |
 | p:int   | Song Part, e.g. A,B,C                                                                     |
 | bpm:int | Pulse                                                                                     |
-| \>     | cresc. wedge, \>4  decrescende wedge over 4 columns                                       | 
-| \<     | decresc. wedge                                                                            | 
+| \>     | decresc. wedge, \>***  decrescende wedge over 4 columns                                   | 
+| \<     | cresc. wedge                                                                              | 
 
 ## Text lines
 

@@ -20,7 +20,19 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\johan\\\\git\\\\tsf\" -Recurse -Filter \"pom.xml\")",
       "Bash(unzip -p /c/Users/johan/git/tsf/tsf-to/target/tsf-to-1.0-SNAPSHOT.jar META-INF/MANIFEST.MF)",
       "Bash(jar tf *)",
-      "Bash(Select-String *)"
+      "Bash(Select-String *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\johan\\\\git\\\\tsf\\\\tsf-to\" -Force)",
+      "Bash(Select-Object -Property Name, PSIsContainer)",
+      "Bash(javap -verbose target/classes/de/jm/tsfto/musicxml/MusicXmlWriter.class)",
+      "Bash(jar -xf target/tsf-to-1.0-SNAPSHOT.jar de/jm/tsfto/musicxml/MusicXmlWriter.class -C /tmp)",
+      "Bash(javap -verbose /tmp/de/jm/tsfto/musicxml/MusicXmlWriter.class)",
+      "Bash(jar xf *)",
+      "Bash(cp AnIrishBlessing_ms.mxl /tmp/aib_ms.zip)",
+      "Read(//c/tmp/**)",
+      "Bash(unzip -o aib_ms.zip -d aib_ms)",
+      "Read(//tmp/**)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   },
   "hooks": {
