@@ -11,28 +11,36 @@ import static de.jm.tsfto.model.song.KeyValueLine.*;
 public class NoteLine extends SongLine {
 
     private String voice;
+    private final boolean explicitVoice;
 
-    private NoteLine(String line, String voice) {
+    private NoteLine(String line, String voice, boolean explicitVoice) {
         super(line);
         this.voice = voice;
+        this.explicitVoice = explicitVoice;
     }
 
     public static NoteLine of(String line) {
         String processedLine = line;
-        String voice ="";
+        String voice = "";
+        boolean explicit = false;
         if (isKeyValue(line)) {
             if ("v".equals(getKey(line))) {
                 processedLine = getValue(line);
                 int indexOfSpace = processedLine.indexOf(" ");
                 voice = processedLine.substring(0, indexOfSpace);
                 processedLine = processedLine.substring(indexOfSpace + 1);
+                explicit = true;
             }
         }
-        return new NoteLine(processedLine, voice);
+        return new NoteLine(processedLine, voice, explicit);
     }
 
     public static NoteLine of(String line, String voice) {
-        return new NoteLine(line, voice);
+        return new NoteLine(line, voice, false);
+    }
+
+    public boolean hasExplicitVoice() {
+        return explicitVoice;
     }
 
     @Override

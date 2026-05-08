@@ -3,9 +3,12 @@ package de.jm.tsfto.musicxml;
 import de.jm.tsfto.model.song.KeyValueLine;
 import de.jm.tsfto.model.song.NoteLine;
 import de.jm.tsfto.model.song.ScorePart;
+import de.jm.tsfto.model.song.SongLine;
 import de.jm.tsfto.model.song.SongModel;
+import de.jm.tsfto.model.song.SymbolLine;
 import de.jm.tsfto.model.tsf.TsfNote;
 import de.jm.tsfto.model.tsf.TsfNote.Accent;
+import de.jm.tsfto.parser.SymbolParser;
 import de.jm.tsfto.parser.TsfTokenParser;
 
 import java.io.IOException;
@@ -95,7 +98,7 @@ public class MusicXmlWriter {
 
     private record BeatGroupsResult(List<List<TsfNote>> groups, List<String> terminators) {}
     private record MeasureData(List<List<NoteEntry>> measures, List<String> barlineTypes) {}
-    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures, List<String> measureBarlines) {}
+    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures, List<String> measureBarlines, int padOffset) {}
 
     // --- public API ---------------------------------------------------------
 
@@ -123,9 +126,10 @@ public class MusicXmlWriter {
 
         int beatsPerMeasure = detectBeatsPerMeasure(songModel);
         int bpm = parseBpm(meta.get("bpm"));
+        MeasureAnnotations ann = collectMeasureAnnotations(songModel);
         boolean firstVoice = true;
         for (VoiceData voice : voices) {
-            appendVoicePart(sb, voice, keyFifths, beatsPerMeasure, firstVoice ? bpm : 0);
+            appendVoicePart(sb, voice, keyFifths, beatsPerMeasure, firstVoice ? bpm : 0, ann);
             firstVoice = false;
         }
 
@@ -148,6 +152,10 @@ public class MusicXmlWriter {
                     voiceNotes.computeIfAbsent(nl.getVoice(), k -> new ArrayList<>()).addAll(nl.getTsfNotes());
             } else {
                 List<NoteLine> allLines = getAllNoteLinesOf(scorePart);
+                if (lastVoiceOrder.isEmpty()) {
+                    // No explicit v: voices seen yet — use auto-assigned names from setVoices
+                    lastVoiceOrder = allLines.stream().map(NoteLine::getVoice).toList();
+                }
                 for (int i = 0; i < Math.min(allLines.size(), lastVoiceOrder.size()); i++)
                     voiceNotes.computeIfAbsent(lastVoiceOrder.get(i), k -> new ArrayList<>())
                               .addAll(allLines.get(i).getTsfNotes());
@@ -160,7 +168,7 @@ public class MusicXmlWriter {
             String voice      = e.getKey();
             int    baseOctave = baseOctaveForVoice(voice);
             MeasureData md = buildMeasures(e.getValue(), baseOctave, keyFifths);
-            result.add(new VoiceData(voice, partId++, md.measures(), md.barlineTypes()));
+            result.add(new VoiceData(voice, partId++, md.measures(), md.barlineTypes(), 0));
         }
 
         // Pad voices that start mid-piece (fewer measures) with whole-measure rests at the front.
@@ -183,7 +191,7 @@ public class MusicXmlWriter {
             }
             paddedMeasures.addAll(vd.measures());
             paddedBarlines.addAll(vd.measureBarlines());
-            aligned.add(new VoiceData(vd.name(), vd.partId(), paddedMeasures, paddedBarlines));
+            aligned.add(new VoiceData(vd.name(), vd.partId(), paddedMeasures, paddedBarlines, pad));
         }
         return aligned;
     }
@@ -204,7 +212,7 @@ public class MusicXmlWriter {
         return scorePart.getSongLines().stream()
                 .filter(l -> l instanceof NoteLine nl
                         && NoteLine.matches(nl.getLine())
-                        && !nl.getVoice().isEmpty())
+                        && nl.hasExplicitVoice())
                 .map(l -> (NoteLine) l)
                 .toList();
     }
@@ -481,7 +489,8 @@ public class MusicXmlWriter {
     // --- parts --------------------------------------------------------------
 
     private void appendVoicePart(StringBuilder sb, VoiceData voice,
-                                  int keyFifths, int beatsPerMeasure, int bpm) {
+                                  int keyFifths, int beatsPerMeasure, int bpm,
+                                  MeasureAnnotations ann) {
         sb.append("  <part id=\"P").append(voice.partId()).append("\">\n");
 
         int     measureNumber = 1;
@@ -499,8 +508,28 @@ public class MusicXmlWriter {
                 if (bpm > 0) appendTempo(sb, bpm);
                 firstMeasure = false;
             }
-            for (NoteEntry entry : measure) appendNote(sb, entry);
-            if (barlineType != null) appendBarline(sb, barlineType);
+            int globalMi = mi - voice.padOffset();
+            if (globalMi >= 0) {
+                String startBarline = ann.startBarlines().get(globalMi);
+                if (startBarline != null) sb.append(startBarline);
+                for (String dir : ann.directions().getOrDefault(globalMi, List.of()))
+                    sb.append(dir);
+            }
+            String noteAnnot = (globalMi >= 0) ? ann.noteAnnotations().get(globalMi) : null;
+            for (int ni = 0; ni < measure.size(); ni++) {
+                boolean lastNote = (ni == measure.size() - 1);
+                appendNote(sb, measure.get(ni), lastNote ? noteAnnot : null);
+            }
+            if (globalMi >= 0) {
+                for (String dir : ann.postNoteDirections().getOrDefault(globalMi, List.of()))
+                    sb.append(dir);
+            }
+            String endBarline = (globalMi >= 0) ? ann.endBarlines().get(globalMi) : null;
+            if (endBarline != null) {
+                sb.append(endBarline);
+            } else if (barlineType != null) {
+                appendBarline(sb, barlineType);
+            }
             sb.append("    </measure>\n");
         }
 
@@ -550,7 +579,7 @@ public class MusicXmlWriter {
         }
     }
 
-    private void appendNote(StringBuilder sb, NoteEntry entry) {
+    private void appendNote(StringBuilder sb, NoteEntry entry, String noteAnnotation) {
         TsfNote note = entry.note();
         sb.append("      <note>\n");
 
@@ -591,7 +620,7 @@ public class MusicXmlWriter {
         boolean hasTie          = !note.isBreak() && (entry.tieStop() || entry.tieStart());
         boolean hasArticulation = !note.isBreak() && (note.isAccented() || note.isMarcato()
                                                    || note.isStaccato() || note.isTenuto());
-        if (hasTie || entry.triplet() || hasArticulation) {
+        if (hasTie || entry.triplet() || hasArticulation || noteAnnotation != null) {
             sb.append("        <notations>\n");
             if (hasTie) {
                 if (entry.tieStop())  sb.append("          <tied type=\"stop\"/>\n");
@@ -610,6 +639,8 @@ public class MusicXmlWriter {
                 else if (note.isTenuto())    sb.append("            <tenuto/>\n");
                 sb.append("          </articulations>\n");
             }
+            if (noteAnnotation != null)
+                sb.append("          ").append(noteAnnotation).append("\n");
             sb.append("        </notations>\n");
         }
 
@@ -642,6 +673,289 @@ public class MusicXmlWriter {
     }
 
     // --- helpers ------------------------------------------------------------
+
+    // --- symbol-line → MusicXML directions / barlines -----------------------
+
+    /** Collected per-measure annotations from all symbol lines. */
+    private record MeasureAnnotations(
+            Map<Integer, List<String>> directions,         // emitted before notes
+            Map<Integer, List<String>> postNoteDirections, // emitted after notes, before right barline
+            Map<Integer, String> startBarlines,            // <barline location="left"> per measure
+            Map<Integer, String> endBarlines,              // <barline location="right"> per measure (overrides auto)
+            Map<Integer, String> noteAnnotations           // added inside <notations> of last note in measure
+    ) {
+        static final MeasureAnnotations EMPTY =
+                new MeasureAnnotations(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
+    }
+
+    private MeasureAnnotations collectMeasureAnnotations(SongModel songModel) {
+        Map<Integer, List<String>> directions     = new TreeMap<>();
+        Map<Integer, List<String>> postNote       = new TreeMap<>();
+        Map<Integer, String>       startBars      = new TreeMap<>();
+        Map<Integer, String>       endBars        = new TreeMap<>();
+        Map<Integer, String>       noteAnnots     = new TreeMap<>();
+        int globalMeasure = 0;
+        for (Object obj : songModel.getSongLines()) {
+            if (!(obj instanceof ScorePart sp)) continue;
+            NoteLine firstNl = firstNoteLineOf(sp);
+            if (firstNl == null) continue;
+            List<Integer> boundaries = measureBoundaries(firstNl);
+            int measureCount = boundaries.size() - 1;
+            for (SongLine sl : sp.getSongLines()) {
+                if (sl instanceof SymbolLine symLine)
+                    addSymbolDirections(symLine.getLine(), boundaries, globalMeasure,
+                                        directions, postNote, startBars, endBars, noteAnnots);
+            }
+            globalMeasure += measureCount;
+        }
+        return new MeasureAnnotations(directions, postNote, startBars, endBars, noteAnnots);
+    }
+
+    private NoteLine firstNoteLineOf(ScorePart sp) {
+        for (SongLine sl : sp.getSongLines())
+            if (sl instanceof NoteLine nl) return nl;
+        return null;
+    }
+
+    /**
+     * Returns cumulative column counts at each measure start: [0, c1, c1+c2, ..., total].
+     * Tokens "||" and "!!" are end-of-section markers and do not occupy a column.
+     */
+    private List<Integer> measureBoundaries(NoteLine nl) {
+        List<Integer> b = new ArrayList<>();
+        b.add(0);
+        int col = 0;
+        boolean first = true;
+        for (String token : NoteLine.getTokens(nl.getLine())) {
+            if (token.equals("||") || token.equals("!!")) continue;
+            boolean newMeasure = !first && (token.startsWith("|") || token.startsWith("!"));
+            if (newMeasure) b.add(col);
+            first = false;
+            col++;
+        }
+        b.add(col); // sentinel: total columns
+        return b;
+    }
+
+    private int findMeasure(List<Integer> boundaries, int col) {
+        for (int i = boundaries.size() - 2; i >= 0; i--)
+            if (col >= boundaries.get(i)) return i;
+        return 0;
+    }
+
+    private void addSymbolDirections(String symContent, List<Integer> boundaries,
+                                      int globalOffset,
+                                      Map<Integer, List<String>> directions,
+                                      Map<Integer, List<String>> postNote,
+                                      Map<Integer, String> startBars,
+                                      Map<Integer, String> endBars,
+                                      Map<Integer, String> noteAnnots) {
+        String expanded = SymbolLine.processMultiCols(symContent.trim());
+        String[] rawTokens = expanded.split(" +");
+
+        int col = 0;
+        int nextWedgeNum = 1;
+        TreeMap<Integer, List<Integer>> wedgeStops = new TreeMap<>(); // stopCol → wedge numbers
+
+        for (String token : rawTokens) {
+            if (token.isEmpty()) continue;
+            if (token.equals("||") || token.equals("!!")) continue;
+
+            // Emit any wedge stops that fall exactly at this column
+            List<Integer> stopNums = wedgeStops.remove(col);
+            if (stopNums != null) {
+                int m = findMeasure(boundaries, col);
+                for (int sn : stopNums)
+                    directions.computeIfAbsent(globalOffset + m, k -> new ArrayList<>())
+                              .add(wedgeStopXml(sn));
+            }
+
+            // Each token occupies its full column span (1.***ds = 5 cols, not 1)
+            int colCount = SymbolLine.getColCount(token);
+
+            if (token.startsWith("1.") || token.startsWith("2.")) {
+                // Volta / ending
+                int endingNum  = token.charAt(0) - '0';
+                int startMeasure = findMeasure(boundaries, col);
+                int endMeasure   = findMeasure(boundaries, col + Math.max(colCount - 1, 0));
+
+                startBars.put(globalOffset + startMeasure,
+                    "      <barline location=\"left\">\n" +
+                    "        <ending type=\"start\" number=\"" + endingNum + "\"/>\n" +
+                    "      </barline>\n");
+
+                if (endingNum == 1) {
+                    endBars.put(globalOffset + endMeasure,
+                        "      <barline location=\"right\">\n" +
+                        "        <bar-style>light-heavy</bar-style>\n" +
+                        "        <ending type=\"stop\" number=\"1\"/>\n" +
+                        "        <repeat direction=\"backward\"/>\n" +
+                        "      </barline>\n");
+                } else {
+                    endBars.put(globalOffset + endMeasure,
+                        "      <barline location=\"right\">\n" +
+                        "        <ending type=\"stop\" number=\"" + endingNum + "\"/>\n" +
+                        "      </barline>\n");
+                }
+
+                // Extract embedded symbols from the token (e.g. "ds" in "1.***ds").
+                // Jump symbols (ds, dc) go as post-note directions so they appear
+                // after the volta notes in the XML — matching their visual position.
+                List<String> parts = SymbolParser.parse(token);
+                for (String part : parts) {
+                    if (part.startsWith("1.") || part.startsWith("2.")
+                            || part.equals("*") || part.isEmpty()) continue;
+                    String xml = symbolToDirectionXml(part, nextWedgeNum);
+                    if (xml != null) {
+                        if (xml.contains("<wedge")) nextWedgeNum++;
+                        boolean isJump = part.equals("ds") || part.equals("dc")
+                                      || part.equals("DS") || part.equals("DC");
+                        Map<Integer, List<String>> target = isJump ? postNote : directions;
+                        target.computeIfAbsent(globalOffset + endMeasure, k -> new ArrayList<>())
+                              .add(xml);
+                    }
+                }
+            } else {
+                // Regular symbol token
+                String stripped = token.replaceAll("^\\*+", "").replaceAll("\\*+$", "");
+                if (!stripped.isEmpty()) {
+                    for (String part : SymbolParser.parse(stripped)) {
+                        if (part.isEmpty() || part.equals("*") || part.equals("_") || part.equals("-"))
+                            continue;
+                        int m   = findMeasure(boundaries, col);
+                        int key = globalOffset + m;
+
+                        if ((part.charAt(0) == '>' || part.charAt(0) == '<')
+                                && (part.length() == 1 || Character.isDigit(part.charAt(1)))) {
+                            // Standalone ">" = hfill spacer in LaTeX → no wedge in MusicXML
+                            if (part.equals(">")) continue;
+                            // Width: explicit number (e.g. <3, >3) or 1 column for bare "<"
+                            int stopCol;
+                            if (part.length() > 1) {
+                                double width;
+                                try { width = Double.parseDouble(part.substring(1)); }
+                                catch (NumberFormatException e) { width = 1; }
+                                stopCol = col + (int) Math.round(width);
+                            } else {
+                                stopCol = col + colCount; // "<***" spans the whole outer token
+                            }
+                            int wnum = nextWedgeNum++;
+                            String wtype = part.charAt(0) == '<' ? "crescendo" : "diminuendo";
+                            directions.computeIfAbsent(key, k -> new ArrayList<>())
+                                      .add(wedgeStartXml(wtype, wnum));
+                            wedgeStops.computeIfAbsent(stopCol, k -> new ArrayList<>()).add(wnum);
+                        } else if (part.equals("%")) {
+                            startBars.putIfAbsent(key,
+                                "      <barline location=\"left\">\n" +
+                                "        <bar-style>heavy-light</bar-style>\n" +
+                                "        <repeat direction=\"forward\"/>\n" +
+                                "      </barline>\n");
+                        } else if (part.equals("ds") || part.equals("DS")
+                                || part.equals("dc") || part.equals("DC")) {
+                            endBars.putIfAbsent(key,
+                                "      <barline location=\"right\">\n" +
+                                "        <bar-style>light-heavy</bar-style>\n" +
+                                "        <repeat direction=\"backward\"/>\n" +
+                                "      </barline>\n");
+                        } else if (part.equals("^")) {
+                            noteAnnots.put(key, "<fermata/>");
+                        } else {
+                            String xml = symbolToDirectionXml(part, nextWedgeNum);
+                            if (xml != null) {
+                                if (xml.contains("<wedge")) nextWedgeNum++;
+                                directions.computeIfAbsent(key, k -> new ArrayList<>()).add(xml);
+                            }
+                        }
+                    }
+                }
+            }
+            col += colCount;
+        }
+
+        // Emit remaining wedge stops at the last measure
+        if (!wedgeStops.isEmpty()) {
+            int lastMeasure = Math.max(0, boundaries.size() - 2);
+            for (List<Integer> wnums : wedgeStops.values())
+                for (int wnum : wnums)
+                    directions.computeIfAbsent(globalOffset + lastMeasure, k -> new ArrayList<>())
+                              .add(wedgeStopXml(wnum));
+        }
+    }
+
+    private String symbolToDirectionXml(String symbol, int wedgeNum) {
+        return switch (symbol) {
+            case "f"   -> dynamicXml("f");
+            case "mf"  -> dynamicXml("mf");
+            case "ff"  -> dynamicXml("ff");
+            case "fff" -> dynamicXml("fff");
+            case "p"   -> dynamicXml("p");
+            case "pp"  -> dynamicXml("pp");
+            case "ppp" -> dynamicXml("ppp");
+            case "mp"  -> dynamicXml("mp");
+            case "fp"  -> dynamicXml("fp");
+            case "%"   -> null;
+            case "$"   -> directionXml("<coda/>", null, "above");
+            case "ds", "DS" -> null;
+            case "dc", "DC" -> null;
+            case "^"   -> null;
+            default    -> {
+                if (symbol.startsWith("p:")) {
+                    String val = symbol.substring(2).trim();
+                    yield directionXml("<rehearsal>" + escapeXml(val) + "</rehearsal>", null, "above");
+                }
+                if (symbol.startsWith("bpm:")) {
+                    try {
+                        int bpm = Integer.parseInt(symbol.substring(4).trim());
+                        yield appendTempoStr(bpm);
+                    } catch (NumberFormatException e) { yield null; }
+                }
+                // Text signs (e.g. "Ref.") without a colon → emit as words direction
+                if (!symbol.contains(":") && symbol.matches("[A-Za-z].*")) {
+                    yield directionXml("<words>" + escapeXml(symbol) + "</words>", null, "above");
+                }
+                yield null;
+            }
+        };
+    }
+
+    private String dynamicXml(String tag) {
+        return "      <direction placement=\"below\">\n"
+             + "        <direction-type><dynamics><" + tag + "/></dynamics></direction-type>\n"
+             + "      </direction>\n";
+    }
+
+    private String directionXml(String typeContent, String soundXml, String placement) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("      <direction placement=\"").append(placement).append("\">\n");
+        sb.append("        <direction-type>").append(typeContent).append("</direction-type>\n");
+        if (soundXml != null) sb.append("        ").append(soundXml).append("\n");
+        sb.append("      </direction>\n");
+        return sb.toString();
+    }
+
+    private String wedgeStartXml(String type, int number) {
+        return "      <direction placement=\"below\">\n"
+             + "        <direction-type><wedge type=\"" + type + "\" number=\"" + number + "\"/></direction-type>\n"
+             + "      </direction>\n";
+    }
+
+    private String wedgeStopXml(int number) {
+        return "      <direction placement=\"below\">\n"
+             + "        <direction-type><wedge type=\"stop\" number=\"" + number + "\"/></direction-type>\n"
+             + "      </direction>\n";
+    }
+
+    private String appendTempoStr(int bpm) {
+        return "      <direction placement=\"above\">\n"
+             + "        <direction-type>\n"
+             + "          <metronome parentheses=\"no\">\n"
+             + "            <beat-unit>quarter</beat-unit>\n"
+             + "            <per-minute>" + bpm + "</per-minute>\n"
+             + "          </metronome>\n"
+             + "        </direction-type>\n"
+             + "        <sound tempo=\"" + bpm + "\"/>\n"
+             + "      </direction>\n";
+    }
 
     // --- pitch resolution (moveable-do) -------------------------------------
 

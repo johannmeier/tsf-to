@@ -99,7 +99,7 @@ public class SymbolLine extends SongLine {
 
     private static final Pattern multiColPattern = Pattern.compile("\\*(\\d+)($|\\s)");
 
-    static String processMultiCols(String line) {
+    public static String processMultiCols(String line) {
         Matcher matcher = multiColPattern.matcher(line);
         while (matcher.find()) {
             int cols = Integer.parseInt(matcher.group(1));
@@ -183,7 +183,7 @@ public class SymbolLine extends SongLine {
         return keyValues;
     }
 
-    static int getColCount(String token) {
+    public static int getColCount(String token) {
         int count = 0;
         for (char c : token.toCharArray()) {
             if (c == '*') {

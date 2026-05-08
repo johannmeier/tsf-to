@@ -1,0 +1,40 @@
+Oberhalb jeder Notenzeile kann eine oder mehrere Symbolzeilen stehen. Diese Zeilen beginnen mit "s:".
+Die Noten und die Symbole sind quasi in einer Tabelle angeordnet. Für eine leere Zelle steht ein "*".
+Die Anzahl der Spalten der Tabelle wird durch die Noten aller Stimmen vorgegeben.
+Für jede Position einer Note, Continue und Pause eines Taktes gibt es eine Spalte. Beispiele:
+:s .m
+:m .l
+-> 2 Spalten
+
+:s .m
+:s .- ,l
+-> 3 Spalten
+
+:s ,m .l
+:     .s ,s
+-> 4 Spalten
+
+In einer Symbolzeile stehen musikalische Zeichen
+
+| sign    | meaning                                                                                   |
+|---------|-------------------------------------------------------------------------------------------|
+| ^       | fermata sign                                                                              |
+| %       | segno sign                                                                                |
+| $       | coda sign                                                                                 |
+| ds      | dal segno                                                                                 |
+| dc      | da capo                                                                                   |
+| 1.      | first repeat: eg. 1.***ds                                                                 |
+| 2.      | second repeat: eg. 2.**                                                                   |
+| f       | forte                                                                                     |
+| mf      | mezzo forte                                                                               |
+| ff      | forte fortissimum                                                                         |
+| p       | piano                                                                                     |
+| pp      | piano pianissimum                                                                         |
+| ppp     | ppp                                                                                       |
+| *       | empty column                                                                              |
+| p:int   | Song Part, e.g. A,B,C                                                                     |
+| bpm:int | Pulse                                                                                     |
+| >       | decresc. wedge, >***  decrescendo wedge over 4 columns                                      |
+| <       | cresc. wedge                                                                            |
+
+Übernimm die Symbolzeilen in die musicXML Datei.
