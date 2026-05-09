@@ -43,15 +43,13 @@ make
 - `SongModel` — top-level orchestrator; parses the whole `.tsf` file into `ScorePart`s, `VersePart`s, and `KeyValueLine`s.
 - `SongLine` (abstract) subclasses: `NoteLine`, `TextLine`, `SymbolLine`, `KeyValueLine`, `ColsLine`, `VerseLine`.
 - `TsfNote` — value object representing one parsed note with enums for `Length`, `Accent`, `Type`.
-- `ScorePart` — groups score lines and assigns voices (soprano, alto, tenor, bass) to `NoteLines` based on their order.
-- `TsfToWesternNote` / `WesternNote` — converts TSF pitch (relative solfège) to absolute Western pitch using the song key.
 
 ### Output Layer
 - `Latex.java` (`src/main/java/de/jm/tsfto/latex/`) — converts the parsed model to LaTeX using `tonic-solfa.sty` macros.
-- `MusicXmlWriter.java` (`src/main/java/de/jm/tsfto/musicxml/`) — exports to MusicXML partwise format. Uses `DIVISIONS=12` per quarter note as the internal beat unit (allows clean representation of half, quarter, eighth, dotted, and triplet values without fractions).
+- `MusicXmlWriter.java` (`src/main/java/de/jm/tsfto/musicxml/`) — exports to MusicXML.
 
 ### CLI (`src/main/java/de/jm/tsfto/cli/`)
-Custom annotation-driven CLI framework. `TsfToApplication` wires it up; `CliApp`/`Cli.java` handle argument parsing via reflection on `@Argument` and `@Flag` annotations.
+Custom annotation-driven CLI framework. `TsfToApplication` wires it up; `CliApp`/`Cli.java` handle argument parsing.
 
 ## TSF Format Quick Reference
 
@@ -59,7 +57,6 @@ Custom annotation-driven CLI framework. `TsfToApplication` wires it up; `CliApp`
 - Symbol lines start with `s:` (or any text line containing `~`).
 - Text lines support `*text` (right-align), `text*` (left-align), `!`/`!!` (bar), `_` (space), `>` (filler), verse numbers (`1.`, `2.`).
 - Key-value pairs (`key: value`) set song metadata (title, key, bpm, etc.).
-- German key names are used: `H` instead of `B`, `B` instead of `Bb`, `Fis`/`Cis`, `Es`/`As`/`Des`/`Ges`/`Ces`.
 
 ## Known Static-State Bugs
 

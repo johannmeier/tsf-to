@@ -91,10 +91,12 @@ public class MusicXmlWriter {
     private record Pitch(String step, int alter, int octave) {}
 
     /** duration = MusicXML divisions; triplet = needs time-modification.
-     *  secondPitch is non-null for split-voice (%) notes. */
+     *  secondPitch is non-null for split-voice (%) notes.
+     *  colIndex is the beat-group column within the measure (before tie-merging), used
+     *  to correlate with symbol-line directions regardless of how many continues are merged. */
     private record NoteEntry(TsfNote note, Pitch pitch, Pitch secondPitch,
                               boolean tieStart, boolean tieStop,
-                              int duration, boolean triplet) {}
+                              int duration, boolean triplet, int colIndex) {}
 
     private record BeatGroupsResult(List<List<TsfNote>> groups, List<String> terminators) {}
     private record MeasureData(List<List<NoteEntry>> measures, List<String> barlineTypes) {}
@@ -198,7 +200,7 @@ public class MusicXmlWriter {
 
     private List<NoteEntry> restMeasure(int duration) {
         TsfNote rest = new TsfNote(0, "", TsfNote.Length.UNKNOWN, Accent.NONE, ":", "");
-        return List.of(new NoteEntry(rest, null, null, false, false, duration, false));
+        return List.of(new NoteEntry(rest, null, null, false, false, duration, false, 0));
     }
 
     private List<NoteLine> getAllNoteLinesOf(ScorePart scorePart) {
@@ -262,10 +264,12 @@ public class MusicXmlWriter {
         List<Boolean>   startsNew    = new ArrayList<>(); // true = first note of new measure
         List<String>    flatBarlines = new ArrayList<>(); // barline from the group this note belongs to
         boolean         firstGroup   = true;
+        int             perMeasureCol = 0;               // beat-group column within current measure
 
         for (int gi = 0; gi < beatGroups.size(); gi++) {
             List<TsfNote> bg = beatGroups.get(gi);
             boolean newMeasure = isMeasureStart(bg.get(0).getAccent()) && !firstGroup;
+            if (newMeasure) perMeasureCol = 0;
             List<int[]> durInfo = computeDurations(bg);
 
             for (int i = 0; i < bg.size(); i++) {
@@ -286,9 +290,10 @@ public class MusicXmlWriter {
                     }
                 }
                 flat.add(new NoteEntry(note, pitch, secondPitch, false, false,
-                                       durInfo.get(i)[0], durInfo.get(i)[1] == 1));
+                                       durInfo.get(i)[0], durInfo.get(i)[1] == 1, perMeasureCol));
                 startsNew.add(i == 0 && newMeasure);
                 flatBarlines.add(terminators.get(gi));
+                perMeasureCol++;
             }
             firstGroup = false;
         }
@@ -299,7 +304,7 @@ public class MusicXmlWriter {
             boolean tieStop  = e.note().isContinue();
             boolean tieStart = (i + 1 < flat.size()) && flat.get(i + 1).note().isContinue();
             flat.set(i, new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
-                                      tieStart, tieStop, e.duration(), e.triplet()));
+                                      tieStart, tieStop, e.duration(), e.triplet(), e.colIndex()));
         }
 
         // Phase 2.5: merge note + following continues into a single note when the combined
@@ -320,7 +325,7 @@ public class MusicXmlWriter {
                         ? flatBarlines.get(i + 1) : flatBarlines.get(i);
                 e = new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
                                   flat.get(i + 1).tieStart(), e.tieStop(),
-                                  combined, e.triplet());
+                                  combined, e.triplet(), e.colIndex());
                 flat.set(i, e);
                 flat.remove(i + 1);
                 startsNew.remove(i + 1);
@@ -512,13 +517,21 @@ public class MusicXmlWriter {
             if (globalMi >= 0) {
                 String startBarline = ann.startBarlines().get(globalMi);
                 if (startBarline != null) sb.append(startBarline);
-                for (String dir : ann.directions().getOrDefault(globalMi, List.of()))
-                    sb.append(dir);
             }
             String noteAnnot = (globalMi >= 0) ? ann.noteAnnotations().get(globalMi) : null;
+            int lastEmittedCol = -1;
             for (int ni = 0; ni < measure.size(); ni++) {
+                NoteEntry entry = measure.get(ni);
+                if (globalMi >= 0) {
+                    int col = entry.colIndex();
+                    if (col != lastEmittedCol) {
+                        for (String dir : ann.directions().getOrDefault(new NoteKey(globalMi, col), List.of()))
+                            sb.append(dir);
+                        lastEmittedCol = col;
+                    }
+                }
                 boolean lastNote = (ni == measure.size() - 1);
-                appendNote(sb, measure.get(ni), lastNote ? noteAnnot : null);
+                appendNote(sb, entry, lastNote ? noteAnnot : null);
             }
             if (globalMi >= 0) {
                 for (String dir : ann.postNoteDirections().getOrDefault(globalMi, List.of()))
@@ -676,9 +689,18 @@ public class MusicXmlWriter {
 
     // --- symbol-line → MusicXML directions / barlines -----------------------
 
+    /** Identifies the note before which a direction should be emitted. */
+    private record NoteKey(int measureIndex, int beatIndex) implements Comparable<NoteKey> {
+        @Override
+        public int compareTo(NoteKey o) {
+            int c = Integer.compare(this.measureIndex, o.measureIndex);
+            return c != 0 ? c : Integer.compare(this.beatIndex, o.beatIndex);
+        }
+    }
+
     /** Collected per-measure annotations from all symbol lines. */
     private record MeasureAnnotations(
-            Map<Integer, List<String>> directions,         // emitted before notes
+            Map<NoteKey, List<String>> directions,         // emitted before the specific note they apply to
             Map<Integer, List<String>> postNoteDirections, // emitted after notes, before right barline
             Map<Integer, String> startBarlines,            // <barline location="left"> per measure
             Map<Integer, String> endBarlines,              // <barline location="right"> per measure (overrides auto)
@@ -689,7 +711,7 @@ public class MusicXmlWriter {
     }
 
     private MeasureAnnotations collectMeasureAnnotations(SongModel songModel) {
-        Map<Integer, List<String>> directions     = new TreeMap<>();
+        Map<NoteKey, List<String>> directions     = new TreeMap<>();
         Map<Integer, List<String>> postNote       = new TreeMap<>();
         Map<Integer, String>       startBars      = new TreeMap<>();
         Map<Integer, String>       endBars        = new TreeMap<>();
@@ -745,7 +767,7 @@ public class MusicXmlWriter {
 
     private void addSymbolDirections(String symContent, List<Integer> boundaries,
                                       int globalOffset,
-                                      Map<Integer, List<String>> directions,
+                                      Map<NoteKey, List<String>> directions,
                                       Map<Integer, List<String>> postNote,
                                       Map<Integer, String> startBars,
                                       Map<Integer, String> endBars,
@@ -764,9 +786,10 @@ public class MusicXmlWriter {
             // Emit any wedge stops that fall exactly at this column
             List<Integer> stopNums = wedgeStops.remove(col);
             if (stopNums != null) {
-                int m = findMeasure(boundaries, col);
+                int m    = findMeasure(boundaries, col);
+                int beat = col - boundaries.get(m);
                 for (int sn : stopNums)
-                    directions.computeIfAbsent(globalOffset + m, k -> new ArrayList<>())
+                    directions.computeIfAbsent(new NoteKey(globalOffset + m, beat), k -> new ArrayList<>())
                               .add(wedgeStopXml(sn));
             }
 
@@ -810,9 +833,11 @@ public class MusicXmlWriter {
                         if (xml.contains("<wedge")) nextWedgeNum++;
                         boolean isJump = part.equals("ds") || part.equals("dc")
                                       || part.equals("DS") || part.equals("DC");
-                        Map<Integer, List<String>> target = isJump ? postNote : directions;
-                        target.computeIfAbsent(globalOffset + endMeasure, k -> new ArrayList<>())
-                              .add(xml);
+                        if (isJump) {
+                            postNote.computeIfAbsent(globalOffset + endMeasure, k -> new ArrayList<>()).add(xml);
+                        } else {
+                            directions.computeIfAbsent(new NoteKey(globalOffset + endMeasure, 0), k -> new ArrayList<>()).add(xml);
+                        }
                     }
                 }
             } else {
@@ -822,13 +847,15 @@ public class MusicXmlWriter {
                     for (String part : SymbolParser.parse(stripped)) {
                         if (part.isEmpty() || part.equals("*") || part.equals("_") || part.equals("-"))
                             continue;
-                        int m   = findMeasure(boundaries, col);
-                        int key = globalOffset + m;
+                        int m    = findMeasure(boundaries, col);
+                        int beat = col - boundaries.get(m);
+                        int mkey = globalOffset + m;
+                        NoteKey nk = new NoteKey(mkey, beat);
 
                         if ((part.charAt(0) == '>' || part.charAt(0) == '<')
                                 && (part.length() == 1 || Character.isDigit(part.charAt(1)))) {
-                            // Standalone ">" = hfill spacer in LaTeX → no wedge in MusicXML
-                            if (part.equals(">")) continue;
+                            // Standalone single-column ">" = hfill spacer in LaTeX → no wedge in MusicXML
+                            if (part.equals(">") && colCount <= 1) continue;
                             // Width: explicit number (e.g. <3, >3) or 1 column for bare "<"
                             int stopCol;
                             if (part.length() > 1) {
@@ -841,29 +868,29 @@ public class MusicXmlWriter {
                             }
                             int wnum = nextWedgeNum++;
                             String wtype = part.charAt(0) == '<' ? "crescendo" : "diminuendo";
-                            directions.computeIfAbsent(key, k -> new ArrayList<>())
+                            directions.computeIfAbsent(nk, k -> new ArrayList<>())
                                       .add(wedgeStartXml(wtype, wnum));
                             wedgeStops.computeIfAbsent(stopCol, k -> new ArrayList<>()).add(wnum);
                         } else if (part.equals("%")) {
-                            startBars.putIfAbsent(key,
+                            startBars.putIfAbsent(mkey,
                                 "      <barline location=\"left\">\n" +
                                 "        <bar-style>heavy-light</bar-style>\n" +
                                 "        <repeat direction=\"forward\"/>\n" +
                                 "      </barline>\n");
                         } else if (part.equals("ds") || part.equals("DS")
                                 || part.equals("dc") || part.equals("DC")) {
-                            endBars.putIfAbsent(key,
+                            endBars.putIfAbsent(mkey,
                                 "      <barline location=\"right\">\n" +
                                 "        <bar-style>light-heavy</bar-style>\n" +
                                 "        <repeat direction=\"backward\"/>\n" +
                                 "      </barline>\n");
                         } else if (part.equals("^")) {
-                            noteAnnots.put(key, "<fermata/>");
+                            noteAnnots.put(mkey, "<fermata/>");
                         } else {
                             String xml = symbolToDirectionXml(part, nextWedgeNum);
                             if (xml != null) {
                                 if (xml.contains("<wedge")) nextWedgeNum++;
-                                directions.computeIfAbsent(key, k -> new ArrayList<>()).add(xml);
+                                directions.computeIfAbsent(nk, k -> new ArrayList<>()).add(xml);
                             }
                         }
                     }
@@ -872,13 +899,13 @@ public class MusicXmlWriter {
             col += colCount;
         }
 
-        // Emit remaining wedge stops at the last measure
+        // Emit remaining wedge stops after the last note of the last measure
         if (!wedgeStops.isEmpty()) {
             int lastMeasure = Math.max(0, boundaries.size() - 2);
             for (List<Integer> wnums : wedgeStops.values())
                 for (int wnum : wnums)
-                    directions.computeIfAbsent(globalOffset + lastMeasure, k -> new ArrayList<>())
-                              .add(wedgeStopXml(wnum));
+                    postNote.computeIfAbsent(globalOffset + lastMeasure, k -> new ArrayList<>())
+                            .add(wedgeStopXml(wnum));
         }
     }
 
