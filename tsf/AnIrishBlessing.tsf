@@ -1,0 +1,47 @@
+T: An Irish Blessing
+C: Traditional (Satz James E. Moore)
+
+left:0.5cm
+small:
+
+K:B-Dur
+
+sql: (\textwidth/12-1.2px)
+s: bpm:74
+s:   p      *   *    <**          >****                    *       *   f   *   *    *    *
+v:s |m,    .s, :d   :f   :- .m   |r   :s,    :-  :s, .s,  |l,     :-  .l, :s, .s,  :s,  .f,
+v:a |m,    .r, :m,  :f,  :- .f,  |f,  :s,_2  :f, :r, .m,  |s,_1.5 :f, .f, :f, .m,  :r,  .f,
+    |1.May_the*road rise  * to   |meet you.     **May_the |Wind    *   be  al->ways* _at_your*
+    |2.May_the*sun  make   *your |days bright,  **may_the |start   *   il- lu- mi-nate_your**
+v:t |s,    .m, :t,  :l,  :- .l,  |t,  :t,_2  :l, :l, .t,  |d      :-  .d  :l, .t,  :d   .t,
+v:t2 |d,    .d, :d,  :d,  :- .d,  |d,  :d,    :-  :d, .d,  |f,     :-  .f, :s, .s,  :s,  .s,
+
+s: p:A
+|s,     :-  :- :s, .s,  |l,     :-  .l,   :s,     :-  .l,  |t,_1.5  :l,  .t,  :d      :-    .d
+|r,_2   :m, :- :r, .m,  |s,_1.5 :f, .f,   :r,_1.5 :m, .m,  |m,      :-   .m,  :t,_1.5 :l,   .s,
+|back.   *    **May_the |sun-       *shine warm    *   up- |on           *your face,   *     the
+|nights. *    **May_the |flow-   *   ers   bloom   *   a-  |long         *your path,        *your
+|s,     :-  :- :d  .d   |d      :-  .d    :t,_1.5 :d  .d   |r       :-   .r   :m      :-    .m
+|d,     :-  :- :m, .m,  |f,     :-  .f,   :m,     :-  .m,  |si,_1.5 :fi, .si, :l,     :-    .l,
+
+s: *     *   *   *      *    *   *     *    *      *    *   Ref. *   %
+|d          :-  .d     :d   .d  :t,   .d   |r      :-  :-  :s, .s, |l, .l, :s,  .f, :s,     :-  .s,
+|f,_1.5 .t, :l, .s,    :f,  .f, :s,   .l,  |f,_3   :l, :s, :s, .s, |s, .f, :r,  .r, :r,_1.5 :m, .m,
+|rains*      * fall     soft _up-_on>your** |fields. *     *And un- |til we  meet_a-* gain,   *   un-
+|house*      **stand_firm_a-*gainst_the*   |Storm   *   *   *   *  |    *   *    *   *       *   *
+|l,_1.5 .r  :d  .t,    :l,  .r  :d    .r   |d_3    :-  :t, :s, .s, |d  .d  :t,  .t, :t,_1.5  :d  .d
+|r,         :-  .r,    :r,  .r, :m,   .fi, |s,     :-  :-  :s, .s, |f, .f, :f,  .f, :m,     :-  .m,
+
+|m   .m   :r   .m   :d      :-  .d   |l%f     :-       :f   .m  :r  .d   |s,   :-  :-  :f, .s,
+|t,  .t,  :t,  .t,  :t,_1.5 :l, .s,  |f,  .t, :d_  .r  :s,  .s, :l, .l,  |f,_3 :-  :-  :f, .r,
+|til  we_meet*  a-   gain,      *may |God,_may_God***>hold   you in  the |palm  *   *   of  his
+|r   .m   :f   .m   :m      :-  .m   |d   .r  :d_  .t, :t,  .d  :d  .r   |d    :l, :t, :t, .t,
+|si, .si, :si, .si, :l,     :-  .l,  |r,      :-       :m,  .m, :f, .f,  |s,   :-  :-  :s, .s,
+
+
+s: 1.***ds            2.**
+|s,   :-  :- :s, .s,  |s,   :-  :- :- ||
+|r,_2 :m, :- :s, .s,  |r,_2 :m, :- :- ||
+|hand, *   *  and un- |hand  *   *  * ||
+|s,   :-  :- :s, .s,  |s,   :-  :- :- ||
+|d,   :-  :- :s, .s,  |d,   :-  :- :- ||

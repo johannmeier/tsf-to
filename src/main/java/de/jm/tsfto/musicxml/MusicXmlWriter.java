@@ -734,9 +734,18 @@ public class MusicXmlWriter {
     }
 
     private NoteLine firstNoteLineOf(ScorePart sp) {
-        for (SongLine sl : sp.getSongLines())
-            if (sl instanceof NoteLine nl) return nl;
-        return null;
+        NoteLine widest = null;
+        int maxTokens = 0;
+        for (SongLine sl : sp.getSongLines()) {
+            if (sl instanceof NoteLine nl) {
+                int tokens = NoteLine.getTokens(nl.getLine()).size();
+                if (tokens > maxTokens) {
+                    maxTokens = tokens;
+                    widest = nl;
+                }
+            }
+        }
+        return widest;
     }
 
     /**

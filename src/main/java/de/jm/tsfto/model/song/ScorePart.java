@@ -146,7 +146,7 @@ public class ScorePart {
 
             SongLine songLine = songLines.get(i);
             if (songLine instanceof SymbolLine symbolLine) {
-                if (writeBarCount && countScorePart % 2 == 0 && (i + 1) < songLines.size() && songLines.get(i + 1) instanceof NoteLine) {
+                if (writeBarCount && countScorePart > 1 && (i + 1) < songLines.size() && songLines.get(i + 1) instanceof NoteLine) {
                     latexLine.append("\\mnbr{%s}\\ ".formatted(barCount));
                     writeBarCount = false;
                 }
@@ -158,7 +158,7 @@ public class ScorePart {
                     latexLine.insert(0, noteLine.getVisibleVoice());
                 }
                 if (firstBracketLine) {
-                    if (countScorePart % 2 == 0 && (i == 0 || !(songLines.get(i - 1) instanceof SymbolLine))) {
+                    if (countScorePart > 1 && (i == 0 || !(songLines.get(i - 1) instanceof SymbolLine))) {
                         latexBuilder.append("\\mnbr{%s}\\ &".formatted(barCount)).append(latexRowEndNewline);
                         writeBarCount = false;
                     }
