@@ -32,7 +32,10 @@
       "Bash(unzip -o aib_ms.zip -d aib_ms)",
       "Read(//tmp/**)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\johan\\\\git\\\\tsf\\\\tsf-to\\\\tsf\\\\AnIrishBlessing.tsf\")",
+      "Bash(Select-Object -First 30)",
+      "Bash(git *)"
     ]
   },
   "hooks": {
