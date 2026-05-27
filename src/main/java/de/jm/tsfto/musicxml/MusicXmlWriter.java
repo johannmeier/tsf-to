@@ -93,14 +93,16 @@ public class MusicXmlWriter {
     /** duration = MusicXML divisions; triplet = needs time-modification.
      *  secondPitch is non-null for split-voice (%) notes.
      *  colIndex is the beat-group column within the measure (before tie-merging), used
-     *  to correlate with symbol-line directions regardless of how many continues are merged. */
+     *  to correlate with symbol-line directions regardless of how many continues are merged.
+     *  measureRest = true when this single entry represents a whole-measure rest. */
     private record NoteEntry(TsfNote note, Pitch pitch, Pitch secondPitch,
                               boolean tieStart, boolean tieStop,
-                              int duration, boolean triplet, int colIndex) {}
+                              int duration, boolean triplet, int colIndex,
+                              boolean measureRest) {}
 
     private record BeatGroupsResult(List<List<TsfNote>> groups, List<String> terminators) {}
-    private record MeasureData(List<List<NoteEntry>> measures, List<String> barlineTypes) {}
-    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures, List<String> measureBarlines, int padOffset) {}
+    private record MeasureData(List<List<NoteEntry>> measures, List<String> barlineTypes, List<Integer> beatsPerMeasure) {}
+    private record VoiceData(String name, int partId, List<List<NoteEntry>> measures, List<String> measureBarlines, int padOffset, List<Integer> beatsPerMeasure) {}
 
     // --- public API ---------------------------------------------------------
 
@@ -126,12 +128,11 @@ public class MusicXmlWriter {
         appendHeader(sb, meta);
         appendPartList(sb, voices);
 
-        int beatsPerMeasure = detectBeatsPerMeasure(songModel);
         int bpm = parseBpm(meta.get("bpm"));
         MeasureAnnotations ann = collectMeasureAnnotations(songModel);
         boolean firstVoice = true;
         for (VoiceData voice : voices) {
-            appendVoicePart(sb, voice, keyFifths, beatsPerMeasure, firstVoice ? bpm : 0, ann);
+            appendVoicePart(sb, voice, keyFifths, firstVoice ? bpm : 0, ann);
             firstVoice = false;
         }
 
@@ -170,7 +171,7 @@ public class MusicXmlWriter {
             String voice      = e.getKey();
             int    baseOctave = baseOctaveForVoice(voice);
             MeasureData md = buildMeasures(e.getValue(), baseOctave, keyFifths);
-            result.add(new VoiceData(voice, partId++, md.measures(), md.barlineTypes(), 0));
+            result.add(new VoiceData(voice, partId++, md.measures(), md.barlineTypes(), 0, md.beatsPerMeasure()));
         }
 
         // Pad voices that start mid-piece (fewer measures) with whole-measure rests at the front.
@@ -193,14 +194,17 @@ public class MusicXmlWriter {
             }
             paddedMeasures.addAll(vd.measures());
             paddedBarlines.addAll(vd.measureBarlines());
-            aligned.add(new VoiceData(vd.name(), vd.partId(), paddedMeasures, paddedBarlines, pad));
+            List<Integer> paddedBeats = paddedMeasures.stream()
+                    .map(m -> Math.max(1, m.stream().mapToInt(NoteEntry::duration).sum() / BEAT))
+                    .toList();
+            aligned.add(new VoiceData(vd.name(), vd.partId(), paddedMeasures, paddedBarlines, pad, paddedBeats));
         }
         return aligned;
     }
 
     private List<NoteEntry> restMeasure(int duration) {
         TsfNote rest = new TsfNote(0, "", TsfNote.Length.UNKNOWN, Accent.NONE, ":", "");
-        return List.of(new NoteEntry(rest, null, null, false, false, duration, false, 0));
+        return List.of(new NoteEntry(rest, null, null, false, false, duration, false, 0, true));
     }
 
     private List<NoteLine> getAllNoteLinesOf(ScorePart scorePart) {
@@ -217,35 +221,6 @@ public class MusicXmlWriter {
                         && nl.hasExplicitVoice())
                 .map(l -> (NoteLine) l)
                 .toList();
-    }
-
-    // --- time signature detection -------------------------------------------
-
-    private int detectBeatsPerMeasure(SongModel songModel) {
-        for (Object obj : songModel.getSongLines()) {
-            if (!(obj instanceof ScorePart sp)) continue;
-            for (NoteLine nl : getNoteLinesOf(sp)) {
-                int beats = beatsInFirstMeasure(nl.getTsfNotes());
-                if (beats > 0) return beats;
-            }
-        }
-        return 4;
-    }
-
-    private int beatsInFirstMeasure(List<TsfNote> notes) {
-        int beats = 0;
-        boolean seenBar = false;
-        for (TsfNote note : notes) {
-            if (note.isEndOfPart()) continue;
-            Accent a = note.getAccent();
-            if (a == Accent.BAR || a == Accent.DOUBLE_BAR) {
-                if (!seenBar) { seenBar = true; beats = 1; }
-                else          { break; }                     // second bar = end
-            } else if (seenBar && (a == Accent.NONE || a == Accent.ACCENTED)) {
-                beats++;
-            }
-        }
-        return beats;
     }
 
     // --- measure / beat-group building --------------------------------------
@@ -290,7 +265,7 @@ public class MusicXmlWriter {
                     }
                 }
                 flat.add(new NoteEntry(note, pitch, secondPitch, false, false,
-                                       durInfo.get(i)[0], durInfo.get(i)[1] == 1, perMeasureCol));
+                                       durInfo.get(i)[0], durInfo.get(i)[1] == 1, perMeasureCol, false));
                 startsNew.add(i == 0 && newMeasure);
                 flatBarlines.add(terminators.get(gi));
                 perMeasureCol++;
@@ -304,7 +279,7 @@ public class MusicXmlWriter {
             boolean tieStop  = e.note().isContinue();
             boolean tieStart = (i + 1 < flat.size()) && flat.get(i + 1).note().isContinue();
             flat.set(i, new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
-                                      tieStart, tieStop, e.duration(), e.triplet(), e.colIndex()));
+                                      tieStart, tieStop, e.duration(), e.triplet(), e.colIndex(), false));
         }
 
         // Phase 2.5: merge note + following continues into a single note when the combined
@@ -325,7 +300,28 @@ public class MusicXmlWriter {
                         ? flatBarlines.get(i + 1) : flatBarlines.get(i);
                 e = new NoteEntry(e.note(), e.pitch(), e.secondPitch(),
                                   flat.get(i + 1).tieStart(), e.tieStop(),
-                                  combined, e.triplet(), e.colIndex());
+                                  combined, e.triplet(), e.colIndex(), false);
+                flat.set(i, e);
+                flat.remove(i + 1);
+                startsNew.remove(i + 1);
+                flatBarlines.set(i, inherited);
+                flatBarlines.remove(i + 1);
+            }
+        }
+
+        // Phase 2.6: merge consecutive rests into longer rests (e.g. two quarter rests → half rest).
+        // Works identically to Phase 2.5 but for rest entries (isBreak) instead of tied notes.
+        for (int i = 0; i < flat.size(); i++) {
+            NoteEntry e = flat.get(i);
+            if (!e.note().isBreak()) continue;
+            while (i + 1 < flat.size()
+                    && flat.get(i + 1).note().isBreak()
+                    && !startsNew.get(i + 1)) {
+                int combined = e.duration() + flat.get(i + 1).duration();
+                if (!isValidDuration(combined)) break;
+                String inherited = flatBarlines.get(i + 1) != null
+                        ? flatBarlines.get(i + 1) : flatBarlines.get(i);
+                e = new NoteEntry(e.note(), null, null, false, false, combined, false, e.colIndex(), false);
                 flat.set(i, e);
                 flat.remove(i + 1);
                 startsNew.remove(i + 1);
@@ -353,7 +349,23 @@ public class MusicXmlWriter {
             measures.add(measure);
             measureBarlines.add(lastBarline);
         }
-        return new MeasureData(measures, measureBarlines);
+        // Phase 4: mark measures where all entries are rests as a single whole-measure rest.
+        // Phase 2.6 may already have merged them to one entry; Phase 4 sets measureRest=true
+        // in all cases (size 1 or more) so MusicXML emits <rest measure="yes"/>.
+        for (int mi = 0; mi < measures.size(); mi++) {
+            List<NoteEntry> m = measures.get(mi);
+            if (m.stream().allMatch(e -> e.note().isBreak())) {
+                int totalDur = m.stream().mapToInt(NoteEntry::duration).sum();
+                TsfNote rest = m.get(0).note();
+                measures.set(mi, List.of(
+                    new NoteEntry(rest, null, null, false, false, totalDur, false, 0, true)));
+            }
+        }
+
+        List<Integer> beatsPerMeasure = measures.stream()
+                .map(m -> Math.max(1, m.stream().mapToInt(NoteEntry::duration).sum() / BEAT))
+                .toList();
+        return new MeasureData(measures, measureBarlines, beatsPerMeasure);
     }
 
     private static BeatGroupsResult splitIntoBeatGroups(List<TsfNote> notes) {
@@ -494,12 +506,13 @@ public class MusicXmlWriter {
     // --- parts --------------------------------------------------------------
 
     private void appendVoicePart(StringBuilder sb, VoiceData voice,
-                                  int keyFifths, int beatsPerMeasure, int bpm,
+                                  int keyFifths, int bpm,
                                   MeasureAnnotations ann) {
         sb.append("  <part id=\"P").append(voice.partId()).append("\">\n");
 
         int     measureNumber = 1;
         boolean firstMeasure  = true;
+        int     prevBeats     = -1;
 
         int totalMeasures = voice.measures().size();
         for (int mi = 0; mi < totalMeasures; mi++) {
@@ -508,11 +521,15 @@ public class MusicXmlWriter {
             boolean         isLast      = (mi == totalMeasures - 1);
             if (isLast) barlineType = "light-heavy";
             sb.append("    <measure number=\"").append(measureNumber++).append("\">\n");
+            int curBeats = voice.beatsPerMeasure().get(mi);
             if (firstMeasure) {
-                appendAttributes(sb, keyFifths, voice.name(), beatsPerMeasure);
+                appendAttributes(sb, keyFifths, voice.name(), curBeats);
                 if (bpm > 0) appendTempo(sb, bpm);
                 firstMeasure = false;
+            } else if (curBeats != prevBeats) {
+                appendTimeChange(sb, curBeats);
             }
+            prevBeats = curBeats;
             int globalMi = mi - voice.padOffset();
             if (globalMi >= 0) {
                 String startBarline = ann.startBarlines().get(globalMi);
@@ -553,6 +570,13 @@ public class MusicXmlWriter {
         sb.append("      <barline location=\"right\">\n");
         sb.append("        <bar-style>").append(barStyle).append("</bar-style>\n");
         sb.append("      </barline>\n");
+    }
+
+    private void appendTimeChange(StringBuilder sb, int beatsPerMeasure) {
+        sb.append("      <attributes>\n");
+        sb.append("        <time><beats>").append(beatsPerMeasure)
+          .append("</beats><beat-type>4</beat-type></time>\n");
+        sb.append("      </attributes>\n");
     }
 
     private void appendTempo(StringBuilder sb, int bpm) {
@@ -597,7 +621,11 @@ public class MusicXmlWriter {
         sb.append("      <note>\n");
 
         if (note.isBreak()) {
-            sb.append("        <rest/>\n");
+            if (entry.measureRest()) {
+                sb.append("        <rest measure=\"yes\"/>\n");
+            } else {
+                sb.append("        <rest/>\n");
+            }
         } else {
             Pitch p = entry.pitch();
             sb.append("        <pitch>\n");
@@ -616,10 +644,11 @@ public class MusicXmlWriter {
         }
 
         sb.append("        <voice>1</voice>\n");
-        sb.append("        <type>").append(noteType(entry.duration(), entry.triplet())).append("</type>\n");
+        // Whole-measure rests always use type "whole" regardless of actual measure duration.
+        sb.append("        <type>").append(entry.measureRest() ? "whole" : noteType(entry.duration(), entry.triplet())).append("</type>\n");
 
         // Dotted note: duration is not a power-of-two multiple of BEAT → add <dot/>
-        if (isDotted(entry.duration())) {
+        if (!entry.measureRest() && isDotted(entry.duration())) {
             sb.append("        <dot/>\n");
         }
 
