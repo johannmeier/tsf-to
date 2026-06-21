@@ -1,0 +1,40 @@
+T: Abendlied
+C: Josef Rheinberger (1839-1901), op. 69, Nr. 3\\Text: Lukas 24,29
+
+K: F
+small:
+sql: (\textwidth/24-1.2px)
+latex: S. 330\\
+
+s: Andante_Molto*** bpm:72
+s:    p  *  *  *   *   *  *   *  *   <4***            *   *   *     >4***
+v:S  |s :- :- :s  |s  :- :- :-  |   :s  :l :t    |d' :-  :d' :-    |d' :-   :t  :-  |l :- :-  :s
+     |Bleib**>bei |uns,*  *  *  | denn_es_will** |A-  *   bend*    |wer-*    den,*  |bleib**>bei
+v:S2 |m :- :- :m  |m  :- :- :-  |   :s  :s :s    |s  :-  :fi :-    |s  :r   :s  :-  |- :- :f  :-
+     |Bleib**>bei |uns,*  *  *  | denn_es_will** |A-  *   bend*    |werden,*_bleib* |   *  bei *
+v:A  |d :- :- :d  |t, :- :- :-  |   :t, :d :r    |d  :-  :r  :-    |r  :-   :r  :-  |  :  :   :
+s:    *  *  *  *   p   *  *  *   <5****               *   *   *     >4***
+v:T  |  :  :  :   |s  :- :- :s  |t  :-  :- :t    |l  :l  :l  :l    |s  :-   :t  :-  |  :  :   :
+     |   *  *  *  |Bleib**>bei  |uns,*   *denn   |es_will_Abend*** |wer-*    den,*  |   *  *   *
+v:T2 |  :  :  :   |m  :- :- :m  |r  :-  :- :s    |m  :m  :fi :fi   |r  :-   :s  :-  |  :  :   :
+s:    *  *  *  *   p   *  *  *   <5****               *   *   *     >4***            *  f
+v:B  |  :  :  :   |m, :- :- :m, |s, :-  :- :s,   |l, :l, :r  :r    |s, :-   :s, :-  |  :r :-  :d
+     |   *  *  *  |Bleib**>bei  |uns,*   *denn   |es_will_Abend*** |wer-*    den,*  |  bleib*  bei
+
+sql: (\textwidth/24-0.6px)
+
+s: * *   *  *          *    *    *  *     *    *  *  *   *   *   *  *  *       *   *  *  *       *     f
+|s  :-  :s :-         |s   :-   :s :-    |s   :- :s :-      |l  :- :- :-      |s  :- :- :-      |     :r :f :l
+|uns,*  denn*         |es   *    will*   |A-   *  bend**    |wer-*  *  *      |den,*  *  *      |  denn_es_will**
+|f  :-  :m :-         |r   :-   :m :-    |t,  :- :d :-      |d  :- :- :-      |d  :- :- :-      |     :  :  :
+s: * f
+|   :r  :- :d         |t,  :s,  :d :m    |f   :- :m :-      |f  :- :- :-      |m  :- :- :-      |     :  :  :
+|>bleib* *  bei       |uns,_denn_es_will*** |A- *  bend**   |wer-*  *  *      |den,*  *  *      |      *  *  *
+s: * *   *  *          *    *    *  *     *    *  *  *   *   *   f
+|   :   :  :          |    :    :  :     |    :  :  :       |   :f :l :d'     |d' :- :s :-      |ta_4 :- :l :s .f
+|    *   *  *         |     *    *  *    |     *  *  *   *  | denn_es_will**  |A-  *  bend*     |wer-*    *  *  *
+s: * *   *  *          *    f    *  *     *    *  *  *   *   *   *  *  *       *   f
+|   :   :  :          |    :r'  :- :d'   |t   :s :- :l_+ .ta |l  :- :- :-     |   :d :m :s      |s    :- :r :-
+|    *   *  *         |     bleib* bei   |uns,_denn** _es*  |will,* *  *      | denn_es_will**  |A-    *  bend*
+|t, :s, :d :m         |f   :-   :m :-    |r   :- :d :-      |f, :- :- :-      |d, :- :- :-      |     :  :  :
+|uns,_denn_es_will*** |A-   *    bend,*  |A-   *  bend**    |wer-*  *  *      |den,*  *  *      |      *  *  *

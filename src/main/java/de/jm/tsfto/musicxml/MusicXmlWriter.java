@@ -550,8 +550,12 @@ public class MusicXmlWriter {
                 if (globalMi >= 0) {
                     int col = entry.colIndex();
                     if (col != lastEmittedCol) {
-                        for (String dir : ann.directions().getOrDefault(new NoteKey(globalMi, col), List.of()))
-                            sb.append(dir);
+                        // Also emit directions for any colIndices skipped by tie-merging,
+                        // so that wedge stops absorbed into a merged note are not lost.
+                        for (int c = lastEmittedCol + 1; c <= col; c++) {
+                            for (String dir : ann.directions().getOrDefault(new NoteKey(globalMi, c), List.of()))
+                                sb.append(dir);
+                        }
                         lastEmittedCol = col;
                     }
                 }
@@ -841,18 +845,19 @@ public class MusicXmlWriter {
     }
 
     private NoteLine firstNoteLineOf(ScorePart sp) {
-        NoteLine widest = null;
-        int maxTokens = 0;
+        NoteLine best = null;
+        int bestLastStart = -1;
         for (SongLine sl : sp.getSongLines()) {
             if (sl instanceof NoteLine nl) {
-                int tokens = NoteLine.getTokens(nl.getLine()).size();
-                if (tokens > maxTokens) {
-                    maxTokens = tokens;
-                    widest = nl;
+                List<Integer> bounds = measureBoundaries(nl);
+                int lastStart = bounds.size() >= 2 ? bounds.get(bounds.size() - 2) : 0;
+                if (lastStart > bestLastStart) {
+                    bestLastStart = lastStart;
+                    best = nl;
                 }
             }
         }
-        return widest;
+        return best;
     }
 
     /**
