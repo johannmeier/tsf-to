@@ -1,5 +1,20 @@
 # tsf-to
 
+## Keys
+* C: Composer
+* T: Title
+* K: Key
+* latex: latex code
+* sql: Quarter length in latex code
+* left: left border size
+* right: right border size
+* top: top border size
+* bottom: botom border size
+* bpm: beats per minute
+* fontsize: normal, small, smaller, tiny
+* newpage: start new page
+* c: comment
+
 ## Note lines
 * Tonic-SolFa note signs eg. ":.,"
   * ! or | for bar
