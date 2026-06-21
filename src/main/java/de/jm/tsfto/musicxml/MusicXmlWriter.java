@@ -752,6 +752,9 @@ public class MusicXmlWriter {
      * only appear in the voice part of the NoteLine that immediately follows it in the ScorePart.
      * Barlines, repeat signs, fermata, and other structural markers are shared across all voices.
      * The null key in the returned map is the fallback for voices with no associated SymbolLine.
+     *
+     * <p>Mirrors {@link #collectVoices} to resolve voice names for ScoreParts that carry no
+     * explicit {@code v:} prefixes by falling back to the voice order of the previous ScorePart.
      */
     private Map<String, MeasureAnnotations> collectVoiceMeasureAnnotations(SongModel songModel) {
         Map<Integer, String> startBars  = new TreeMap<>();
@@ -760,6 +763,7 @@ public class MusicXmlWriter {
         Map<String, Map<NoteKey, List<String>>> dirsByVoice = new LinkedHashMap<>();
         Map<String, Map<Integer, List<String>>> postByVoice = new LinkedHashMap<>();
 
+        List<String> lastVoiceOrder = new ArrayList<>();
         int globalMeasure = 0;
         for (Object obj : songModel.getSongLines()) {
             if (!(obj instanceof ScorePart sp)) continue;
@@ -767,9 +771,27 @@ public class MusicXmlWriter {
             if (firstNl == null) continue;
             List<Integer> boundaries = measureBoundaries(firstNl);
             int measureCount = boundaries.size() - 1;
+
+            // Determine effective voice order for this ScorePart (mirrors collectVoices logic).
+            // ScoreParts with explicit v: voices update lastVoiceOrder; others inherit it.
+            List<NoteLine> voicedLines = getNoteLinesOf(sp);
+            List<String> currentVoiceOrder;
+            if (!voicedLines.isEmpty()) {
+                currentVoiceOrder = voicedLines.stream().map(NoteLine::getVoice).toList();
+                lastVoiceOrder = new ArrayList<>(currentVoiceOrder);
+            } else {
+                currentVoiceOrder = lastVoiceOrder;
+            }
+
+            // Map each NoteLine in the ScorePart to its effective voice name by position.
+            List<NoteLine> allNoteLines = getAllNoteLinesOf(sp);
+            Map<NoteLine, String> noteLineVoice = new LinkedHashMap<>();
+            for (int i = 0; i < Math.min(allNoteLines.size(), currentVoiceOrder.size()); i++)
+                noteLineVoice.put(allNoteLines.get(i), currentVoiceOrder.get(i));
+
             for (SongLine sl : sp.getSongLines()) {
                 if (sl instanceof SymbolLine symLine) {
-                    String voice = findNextVoice(sp, symLine);
+                    String voice = findNextVoice(sp, symLine, noteLineVoice);
                     addSymbolDirections(symLine.getLine(), boundaries, globalMeasure,
                             dirsByVoice.computeIfAbsent(voice, k -> new TreeMap<>()),
                             postByVoice.computeIfAbsent(voice, k -> new TreeMap<>()),
@@ -802,13 +824,18 @@ public class MusicXmlWriter {
         return result;
     }
 
-    /** Returns the voice name of the NoteLine immediately following {@code target} in the ScorePart,
-     *  or null if no NoteLine follows (directions fall back to all voices). */
-    private String findNextVoice(ScorePart sp, SymbolLine target) {
+    /**
+     * Returns the effective voice name of the NoteLine immediately following {@code target}
+     * in the ScorePart, using {@code noteLineVoice} to resolve position-based voice names
+     * for lines without an explicit {@code v:} prefix.
+     * Returns null when no NoteLine follows (directions fall back to all voices).
+     */
+    private String findNextVoice(ScorePart sp, SymbolLine target, Map<NoteLine, String> noteLineVoice) {
         boolean found = false;
         for (SongLine sl : sp.getSongLines()) {
             if (sl == target) { found = true; continue; }
-            if (found && sl instanceof NoteLine nl) return nl.getVoice();
+            if (found && sl instanceof NoteLine nl)
+                return noteLineVoice.getOrDefault(nl, nl.getVoice());
         }
         return null;
     }
