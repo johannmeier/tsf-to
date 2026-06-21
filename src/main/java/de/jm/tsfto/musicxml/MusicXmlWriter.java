@@ -129,9 +129,11 @@ public class MusicXmlWriter {
         appendPartList(sb, voices);
 
         int bpm = parseBpm(meta.get("bpm"));
-        MeasureAnnotations ann = collectMeasureAnnotations(songModel);
+        Map<String, MeasureAnnotations> annByVoice = collectVoiceMeasureAnnotations(songModel);
         boolean firstVoice = true;
         for (VoiceData voice : voices) {
+            MeasureAnnotations ann = annByVoice.getOrDefault(voice.name(),
+                    annByVoice.getOrDefault(null, MeasureAnnotations.EMPTY));
             appendVoicePart(sb, voice, keyFifths, firstVoice ? bpm : 0, ann);
             firstVoice = false;
         }
@@ -232,7 +234,8 @@ public class MusicXmlWriter {
 
         int[][] diatonicScale = getDiatonicScale(keyFifths);
         int     tonicLetter   = TONIC_LETTER[keyFifths + 7];
-        Pitch   lastPitch     = resolvePitch("d", 0, diatonicScale, tonicLetter, baseOctave);
+        Pitch   lastPitch       = resolvePitch("d", 0, diatonicScale, tonicLetter, baseOctave);
+        Pitch   lastSecondPitch = null;
 
         // Phase 1: flat list of NoteEntries (ties not yet set) + measure-boundary + per-note barline
         List<NoteEntry> flat         = new ArrayList<>();
@@ -251,18 +254,23 @@ public class MusicXmlWriter {
                 TsfNote note = bg.get(i);
                 Pitch pitch = lastPitch;
                 if (note.isNote()) {
-                    pitch     = resolvePitch(note.getNote(), note.getOctave(),
-                                             diatonicScale, tonicLetter, baseOctave);
-                    lastPitch = pitch;
+                    pitch           = resolvePitch(note.getNote(), note.getOctave(),
+                                                   diatonicScale, tonicLetter, baseOctave);
+                    lastPitch       = pitch;
+                    lastSecondPitch = null;
                 }
                 Pitch secondPitch = null;
                 if (note.isStack()) {
                     String s = note.getSecondNote();
                     if (!s.isEmpty()) {
                         TsfNote sn = TsfTokenParser.getPlainNote(s);
-                        secondPitch = resolvePitch(sn.getNote(), sn.getOctave(),
-                                                   diatonicScale, tonicLetter, baseOctave);
+                        secondPitch     = resolvePitch(sn.getNote(), sn.getOctave(),
+                                                       diatonicScale, tonicLetter, baseOctave);
+                        lastSecondPitch = secondPitch;
                     }
+                } else if (note.isContinue()) {
+                    // Continue inherits the chord voicing of the preceding stacked note
+                    secondPitch = lastSecondPitch;
                 }
                 flat.add(new NoteEntry(note, pitch, secondPitch, false, false,
                                        durInfo.get(i)[0], durInfo.get(i)[1] == 1, perMeasureCol, false));
@@ -739,12 +747,19 @@ public class MusicXmlWriter {
                 new MeasureAnnotations(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
     }
 
-    private MeasureAnnotations collectMeasureAnnotations(SongModel songModel) {
-        Map<NoteKey, List<String>> directions     = new TreeMap<>();
-        Map<Integer, List<String>> postNote       = new TreeMap<>();
-        Map<Integer, String>       startBars      = new TreeMap<>();
-        Map<Integer, String>       endBars        = new TreeMap<>();
-        Map<Integer, String>       noteAnnots     = new TreeMap<>();
+    /**
+     * Builds per-voice MeasureAnnotations so that a SymbolLine's directions (dynamics, wedges, etc.)
+     * only appear in the voice part of the NoteLine that immediately follows it in the ScorePart.
+     * Barlines, repeat signs, fermata, and other structural markers are shared across all voices.
+     * The null key in the returned map is the fallback for voices with no associated SymbolLine.
+     */
+    private Map<String, MeasureAnnotations> collectVoiceMeasureAnnotations(SongModel songModel) {
+        Map<Integer, String> startBars  = new TreeMap<>();
+        Map<Integer, String> endBars    = new TreeMap<>();
+        Map<Integer, String> noteAnnots = new TreeMap<>();
+        Map<String, Map<NoteKey, List<String>>> dirsByVoice = new LinkedHashMap<>();
+        Map<String, Map<Integer, List<String>>> postByVoice = new LinkedHashMap<>();
+
         int globalMeasure = 0;
         for (Object obj : songModel.getSongLines()) {
             if (!(obj instanceof ScorePart sp)) continue;
@@ -753,13 +768,49 @@ public class MusicXmlWriter {
             List<Integer> boundaries = measureBoundaries(firstNl);
             int measureCount = boundaries.size() - 1;
             for (SongLine sl : sp.getSongLines()) {
-                if (sl instanceof SymbolLine symLine)
+                if (sl instanceof SymbolLine symLine) {
+                    String voice = findNextVoice(sp, symLine);
                     addSymbolDirections(symLine.getLine(), boundaries, globalMeasure,
-                                        directions, postNote, startBars, endBars, noteAnnots);
+                            dirsByVoice.computeIfAbsent(voice, k -> new TreeMap<>()),
+                            postByVoice.computeIfAbsent(voice, k -> new TreeMap<>()),
+                            startBars, endBars, noteAnnots);
+                }
             }
             globalMeasure += measureCount;
         }
-        return new MeasureAnnotations(directions, postNote, startBars, endBars, noteAnnots);
+
+        Map<NoteKey, List<String>> fallbackDirs = dirsByVoice.getOrDefault(null, Map.of());
+        Map<Integer, List<String>> fallbackPost  = postByVoice.getOrDefault(null, Map.of());
+
+        Map<String, MeasureAnnotations> result = new LinkedHashMap<>();
+        Set<String> voiceNames = new LinkedHashSet<>();
+        dirsByVoice.keySet().stream().filter(k -> k != null).forEach(voiceNames::add);
+        postByVoice.keySet().stream().filter(k -> k != null).forEach(voiceNames::add);
+
+        for (String voice : voiceNames) {
+            Map<NoteKey, List<String>> dirs = new TreeMap<>();
+            fallbackDirs.forEach((k, v) -> dirs.put(k, new ArrayList<>(v)));
+            dirsByVoice.getOrDefault(voice, Map.of()).forEach((k, v) ->
+                    dirs.computeIfAbsent(k, kk -> new ArrayList<>()).addAll(v));
+            Map<Integer, List<String>> post = new TreeMap<>();
+            fallbackPost.forEach((k, v) -> post.put(k, new ArrayList<>(v)));
+            postByVoice.getOrDefault(voice, Map.of()).forEach((k, v) ->
+                    post.computeIfAbsent(k, kk -> new ArrayList<>()).addAll(v));
+            result.put(voice, new MeasureAnnotations(dirs, post, startBars, endBars, noteAnnots));
+        }
+        result.put(null, new MeasureAnnotations(fallbackDirs, fallbackPost, startBars, endBars, noteAnnots));
+        return result;
+    }
+
+    /** Returns the voice name of the NoteLine immediately following {@code target} in the ScorePart,
+     *  or null if no NoteLine follows (directions fall back to all voices). */
+    private String findNextVoice(ScorePart sp, SymbolLine target) {
+        boolean found = false;
+        for (SongLine sl : sp.getSongLines()) {
+            if (sl == target) { found = true; continue; }
+            if (found && sl instanceof NoteLine nl) return nl.getVoice();
+        }
+        return null;
     }
 
     private NoteLine firstNoteLineOf(ScorePart sp) {
