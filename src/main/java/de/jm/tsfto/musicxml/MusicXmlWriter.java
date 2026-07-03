@@ -563,6 +563,15 @@ public class MusicXmlWriter {
                 appendNote(sb, entry, lastNote ? noteAnnot : null);
             }
             if (globalMi >= 0) {
+                // Flush directions targeting columns past the last emitted entry: tie-merging can
+                // absorb several original columns into one note, leaving trailing columns (e.g. a
+                // coda sign on the very last beat of a merged tied note) without a note to key off.
+                final int finalGlobalMi = globalMi;
+                final int finalLastEmittedCol = lastEmittedCol;
+                ann.directions().entrySet().stream()
+                        .filter(e -> e.getKey().measureIndex() == finalGlobalMi && e.getKey().beatIndex() > finalLastEmittedCol)
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEach(e -> e.getValue().forEach(sb::append));
                 for (String dir : ann.postNoteDirections().getOrDefault(globalMi, List.of()))
                     sb.append(dir);
             }
@@ -965,7 +974,9 @@ public class MusicXmlWriter {
                 // Regular symbol token
                 String stripped = token.replaceAll("^\\*+", "").replaceAll("\\*+$", "");
                 if (!stripped.isEmpty()) {
-                    for (String part : SymbolParser.parse(stripped)) {
+                    List<String> parts = SymbolParser.parse(stripped);
+                    for (int pi = 0; pi < parts.size(); pi++) {
+                        String part = parts.get(pi);
                         if (part.isEmpty() || part.equals("*") || part.equals("_") || part.equals("-"))
                             continue;
                         int m    = findMeasure(boundaries, col);
@@ -975,8 +986,9 @@ public class MusicXmlWriter {
 
                         if ((part.charAt(0) == '>' || part.charAt(0) == '<')
                                 && (part.length() == 1 || Character.isDigit(part.charAt(1)))) {
-                            // Standalone single-column ">" = hfill spacer in LaTeX → no wedge in MusicXML
-                            if (part.equals(">") && colCount <= 1) continue;
+                            // Bare ">" is always an \hfill spacer in LaTeX (never a wedge) →
+                            // never emit a wedge for it in MusicXML, regardless of surrounding columns.
+                            if (part.equals(">")) continue;
                             // Width: explicit number (e.g. <3, >3) or 1 column for bare "<"
                             int stopCol;
                             if (part.length() > 1) {
@@ -998,8 +1010,24 @@ public class MusicXmlWriter {
                                 "        <bar-style>heavy-light</bar-style>\n" +
                                 "        <repeat direction=\"forward\"/>\n" +
                                 "      </barline>\n");
-                        } else if (part.equals("ds") || part.equals("DS")
-                                || part.equals("dc") || part.equals("DC")) {
+                        } else if (part.equals("dc") || part.equals("DC")) {
+                            // "dc_coda" / "DC_coda" → Da Capo al Coda: jump back to the start,
+                            // then (on that repeat) skip forward at the coda sign ($, tocoda="1")
+                            // straight to the Coda section (marked coda="1"). No repeat barline.
+                            int codaIdx = findCodaAfter(parts, pi);
+                            if (codaIdx >= 0) {
+                                postNote.computeIfAbsent(mkey, k -> new ArrayList<>())
+                                        .add(directionXml("<words>D.C. al Coda</words>",
+                                                "<sound dacapo=\"yes\"/>", "above"));
+                                pi = codaIdx;
+                            } else {
+                                endBars.putIfAbsent(mkey,
+                                    "      <barline location=\"right\">\n" +
+                                    "        <bar-style>light-heavy</bar-style>\n" +
+                                    "        <repeat direction=\"backward\"/>\n" +
+                                    "      </barline>\n");
+                            }
+                        } else if (part.equals("ds") || part.equals("DS")) {
                             endBars.putIfAbsent(mkey,
                                 "      <barline location=\"right\">\n" +
                                 "        <bar-style>light-heavy</bar-style>\n" +
@@ -1007,6 +1035,10 @@ public class MusicXmlWriter {
                                 "      </barline>\n");
                         } else if (part.equals("^")) {
                             noteAnnots.put(mkey, "<fermata/>");
+                        } else if (part.equals("Coda")) {
+                            // Section label marking the Coda's entry point (the target of tocoda).
+                            directions.computeIfAbsent(nk, k -> new ArrayList<>())
+                                      .add(directionXml("<words>Coda</words>", "<sound coda=\"1\"/>", "above"));
                         } else {
                             String xml = symbolToDirectionXml(part, nextWedgeNum);
                             if (xml != null) {
@@ -1030,6 +1062,19 @@ public class MusicXmlWriter {
         }
     }
 
+    /**
+     * Looks ahead from {@code fromIndex} (exclusive) for a "coda" part, skipping "_" separators.
+     * Returns its index, or -1 if the next meaningful part isn't "coda" (e.g. "dc_coda").
+     */
+    private int findCodaAfter(List<String> parts, int fromIndex) {
+        for (int j = fromIndex + 1; j < parts.size(); j++) {
+            String p = parts.get(j);
+            if (p.equals("_")) continue;
+            return p.equalsIgnoreCase("coda") ? j : -1;
+        }
+        return -1;
+    }
+
     private String symbolToDirectionXml(String symbol, int wedgeNum) {
         return switch (symbol) {
             case "f"   -> dynamicXml("f");
@@ -1042,7 +1087,7 @@ public class MusicXmlWriter {
             case "mp"  -> dynamicXml("mp");
             case "fp"  -> dynamicXml("fp");
             case "%"   -> null;
-            case "$"   -> directionXml("<coda/>", null, "above");
+            case "$"   -> directionXml("<coda/>", "<sound tocoda=\"1\"/>", "above");
             case "ds", "DS" -> null;
             case "dc", "DC" -> null;
             case "^"   -> null;
